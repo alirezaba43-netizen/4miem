@@ -3,9 +3,16 @@ import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocess
 import { Environment, useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Sparkles, Play, Pause } from "lucide-react";
+import { Sparkles, Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Lang = "fa" | "en";
+
+const portfolioProjects = [
+  { id: 1, title: "Project One", videoUrl: "/portfolio.mp4" },
+  { id: 2, title: "Project Two", videoUrl: "/portfolio-2.mp4" },
+  { id: 3, title: "Project Three", videoUrl: "/portfolio-3.mp4" },
+];
 
 function GalleryCamera() {
 	const { camera, pointer } = useThree();
@@ -120,23 +127,77 @@ function DeskScene({ onOpenAi }: { onOpenAi: () => void }) {
 }
 
 export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; onToggleLang: () => void; onOpenAi: () => void }) {
-	const videoRef = useRef<HTMLVideoElement>(null);
+	const [currentIndex, setCurrentIndex] = useState(0);
+	const [direction, setDirection] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
+	const videoRef = useRef<HTMLVideoElement>(null);
+
+	const touchStartX = useRef(0);
+	const touchEndX = useRef(0);
+
+	const handleNext = () => {
+		setDirection(1);
+		setIsPlaying(false);
+		setCurrentIndex((prev) => (prev === portfolioProjects.length - 1 ? 0 : prev + 1));
+	};
+
+	const handlePrev = () => {
+		setDirection(-1);
+		setIsPlaying(false);
+		setCurrentIndex((prev) => (prev === 0 ? portfolioProjects.length - 1 : prev - 1));
+	};
+
+	const handleTouchStart = (e: React.TouchEvent) => {
+		touchStartX.current = e.touches[0].clientX;
+	};
+
+	const handleTouchMove = (e: React.TouchEvent) => {
+		touchEndX.current = e.touches[0].clientX;
+	};
+
+	const handleTouchEnd = () => {
+		if (!touchStartX.current || !touchEndX.current) return;
+		const distance = touchStartX.current - touchEndX.current;
+		if (distance > 50) handleNext();
+		else if (distance < -50) handlePrev();
+		touchStartX.current = 0;
+		touchEndX.current = 0;
+	};
 
 	const handleTogglePlay = () => {
 		const video = videoRef.current;
 		if (!video) return;
 
 		if (video.paused) {
-			video.play().then(() => {
-				setIsPlaying(true);
-			}).catch((err) => {
-				console.log("Play error:", err);
-			});
+			video.play().then(() => setIsPlaying(true)).catch(() => {});
 		} else {
 			video.pause();
 			setIsPlaying(false);
 		}
+	};
+
+	// تنظیمات انیمیشن سه‌بعدی (زاویه چرخش به عقب + اسلاید)
+	const slideVariants = {
+		enter: (direction: number) => ({
+			x: direction > 0 ? 150 : -150,
+			rotateY: direction > 0 ? 45 : -45,
+			opacity: 0,
+			scale: 0.85
+		}),
+		center: {
+			zIndex: 1,
+			x: 0,
+			rotateY: 0,
+			opacity: 1,
+			scale: 1
+		},
+		exit: (direction: number) => ({
+			zIndex: 0,
+			x: direction < 0 ? 150 : -150,
+			rotateY: direction < 0 ? 45 : -45,
+			opacity: 0,
+			scale: 0.85
+		})
 	};
 
 	return (
@@ -152,71 +213,171 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 				<button className="gallery-language" onClick={onToggleLang}>{lang === "fa" ? "EN" : "FA"}</button>
 			</header>
 			
-			<section className="world-section gallery-act">
+			<section className="world-section gallery-act" style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
 				<Canvas 
 					dpr={[1, 2]} 
 					camera={{ position: [0, .8, 7.8], fov: 42 }} 
 					gl={{ antialias: true, powerPreference: "high-performance" }} 
 					onCreated={({ gl }) => gl.setClearColor("#030507")}
+					style={{ position: "absolute", inset: 0 }}
 				>
 					<GalleryCamera />
 					<DeskScene onOpenAi={onOpenAi} />
 				</Canvas>
 
-				{/* مانیتور کاملاً نمایشی و مجهز به ویدیو پلیر HTML در دقیق‌ترین موقعیت سه‌بعدی روی صفحه */}
-				<div style={{
-					position: "absolute",
-					top: "32%",
-					left: "50%",
-					transform: "translateX(-50%)",
-					width: "240px",
-					height: "380px",
-					background: "#14181a",
-					borderRadius: "12px",
-					padding: "8px",
-					boxShadow: "0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(46, 196, 182, 0.2)",
-					border: "2px solid #22282a",
-					zIndex: 10,
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center"
-				}}>
-					{/* قاب صفحه نمایش */}
-					<div style={{
-						width: "100%",
-						height: "100%",
-						background: "#000",
-						borderRadius: "6px",
+				{/* کانتینر مرکزی با پرسپکتیو سه‌بعدی */}
+				<div 
+					style={{
+						position: "absolute",
+						inset: 0,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						pointerEvents: "none",
+						zIndex: 10,
 						overflow: "hidden",
-						position: "relative"
-					}}>
-						<video
-							ref={videoRef}
-							src="/portfolio.mp4"
-							playsInline
-							loop
+						perspective: "1000px"
+					}}
+				>
+					<AnimatePresence initial={false} custom={direction} mode="popLayout">
+						<motion.div 
+							key={currentIndex}
+							custom={direction}
+							variants={slideVariants}
+							initial="enter"
+							animate="center"
+							exit="exit"
+							transition={{
+								x: { type: "spring", stiffness: 280, damping: 25 },
+								rotateY: { type: "spring", stiffness: 280, damping: 25 },
+								opacity: { duration: 0.25 },
+								scale: { duration: 0.25 }
+							}}
+							onTouchStart={handleTouchStart}
+							onTouchMove={handleTouchMove}
+							onTouchEnd={handleTouchEnd}
 							style={{
+								position: "absolute",
+								width: "240px",
+								height: "380px",
+								background: "#14181a",
+								borderRadius: "12px",
+								padding: "8px",
+								boxShadow: "0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(46, 196, 182, 0.2)",
+								border: "2px solid #22282a",
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "center",
+								pointerEvents: "auto",
+								touchAction: "pan-y",
+								transformStyle: "preserve-3d"
+							}}
+						>
+							{/* فلش چپ */}
+							<button 
+								onClick={handlePrev}
+								style={{
+									position: "absolute",
+									left: "-55px",
+									top: "50%",
+									transform: "translateY(-50%)",
+									background: "rgba(20, 24, 26, 0.9)",
+									border: "1px solid #2ec4b6",
+									color: "#2ec4b6",
+									borderRadius: "50%",
+									width: "40px",
+									height: "40px",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									cursor: "pointer",
+									zIndex: 20,
+									boxShadow: "0 4px 15px rgba(0,0,0,0.5)"
+								}}
+							>
+								<ChevronLeft size={22} />
+							</button>
+
+							{/* فلش راست */}
+							<button 
+								onClick={handleNext}
+								style={{
+									position: "absolute",
+									right: "-55px",
+									top: "50%",
+									transform: "translateY(-50%)",
+									background: "rgba(20, 24, 26, 0.9)",
+									border: "1px solid #2ec4b6",
+									color: "#2ec4b6",
+									borderRadius: "50%",
+									width: "40px",
+									height: "40px",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									cursor: "pointer",
+									zIndex: 20,
+									boxShadow: "0 4px 15px rgba(0,0,0,0.5)"
+								}}
+							>
+								<ChevronRight size={22} />
+							</button>
+
+							{/* ویدیو و قاب */}
+							<div style={{
 								width: "100%",
 								height: "100%",
-								objectFit: "cover",
-								display: "block"
-							}}
-							onPlay={() => setIsPlaying(true)}
-							onPause={() => setIsPlaying(false)}
-						/>
-					</div>
-					{/* چراغ LED زیر مانیتور */}
-					<div style={{
-						width: "6px",
-						height: "6px",
-						borderRadius: "50%",
-						background: isPlaying ? "#ffd166" : "#2ec4b6",
-						boxShadow: `0 0 8px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
-						marginTop: "8px"
-					}} />
+								background: "#000",
+								borderRadius: "6px",
+								overflow: "hidden",
+								position: "relative"
+							}}>
+								<video
+									ref={videoRef}
+									src={portfolioProjects[currentIndex].videoUrl}
+									playsInline
+									loop
+									style={{
+										width: "100%",
+										height: "100%",
+										objectFit: "cover",
+										display: "block"
+									}}
+									onPlay={() => setIsPlaying(true)}
+									onPause={() => setIsPlaying(false)}
+								/>
+
+								{/* شمارنده */}
+								<div style={{
+									position: "absolute",
+									top: "10px",
+									right: "10px",
+									background: "rgba(0,0,0,0.6)",
+									color: "#2ec4b6",
+									padding: "2px 8px",
+									borderRadius: "4px",
+									fontSize: "10px",
+									fontWeight: "bold",
+									zIndex: 5
+								}}>
+									0{currentIndex + 1} / 0{portfolioProjects.length}
+								</div>
+							</div>
+
+							{/* چراغ LED */}
+							<div style={{
+								width: "6px",
+								height: "6px",
+								borderRadius: "50%",
+								background: isPlaying ? "#ffd166" : "#2ec4b6",
+								boxShadow: `0 0 8px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
+								marginTop: "8px"
+							}} />
+						</motion.div>
+					</AnimatePresence>
 				</div>
 
-				{/* دکمه کنترل پخش ویدیو */}
+				{/* دکمه کنترل پخش */}
 				<div style={{ position: "absolute", bottom: "75px", left: "50%", transform: "translateX(-50%)", zIndex: 15 }}>
 					<button 
 						onClick={handleTogglePlay}
@@ -250,7 +411,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 					<div className="world-copy">
 						<span className="hero-kicker"><Sparkles size={12} /> ADVANCED WORKSPACE</span>
 						<h1>A desk for<br /><em>new worlds.</em></h1>
-						<p>برای پخش ویدیو روی دکمه‌ی پایین صفحه کلیک کنید و برای ورود به استودیو روی تبلت بزنید.</p>
+						<p>برای پخش ویدیو روی دکمه‌ی پایین صفحه کلیک کنید و برای جابجایی مانیتور از فلش‌ها یا سوایپ استفاده کنید.</p>
 					</div>
 					<div className="world-rail right">
 						<span>IDEAS IN / IMAGES OUT</span>
