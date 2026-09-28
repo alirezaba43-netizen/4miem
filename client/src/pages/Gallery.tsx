@@ -115,8 +115,6 @@ function DeskScene({ onOpenAi }: { onOpenAi: () => void }) {
 
 			<InteractiveTablet onOpenAi={onOpenAi} />
 
-			<Environment preset="night" />
-			
 			<EffectComposer>
 				<Bloom luminanceThreshold={.12} intensity={1.5} mipmapBlur radius={.75} />
 				<Noise opacity={.02} />
