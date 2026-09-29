@@ -20,7 +20,7 @@ const copy = {
 	en: {
 		hint: "Press the button below to play or pause the video, and use the arrows or swipe to change the screen.",
 		pause: "Pause video on monitor",
-		play: "Play video on monitor",
+        play: "Play video on monitor",
 		prev: "Previous video",
 		next: "Next video",
 		switchLang: "تغییر به فارسی",
@@ -28,9 +28,9 @@ const copy = {
 } as const;
 
 const portfolioProjects = [
-  { id: 1, title: "Project One", videoUrl: "/portfolio.mp4", posterUrl: "/portfolio-poster-1.jpg", initialLikes: 142 },
-  { id: 2, title: "Project Two", videoUrl: "/portfolio-2.mp4", posterUrl: "/portfolio-poster-2.jpg", initialLikes: 98 },
-  { id: 3, title: "Project Three", videoUrl: "/portfolio-3.mp4", posterUrl: "/portfolio-poster-3.jpg", initialLikes: 230 },
+  { id: 1, title: "Project One", videoUrl: "/portfolio.mp4", posterUrl: "/portfolio-poster-1.jpg" },
+  { id: 2, title: "Project Two", videoUrl: "/portfolio-2.mp4", posterUrl: "/portfolio-poster-2.jpg" },
+  { id: 3, title: "Project Three", videoUrl: "/portfolio-3.mp4", posterUrl: "/portfolio-poster-3.jpg" },
 ];
 
 function GalleryCamera() {
@@ -161,8 +161,27 @@ function VideoSlide({
 }) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [isMuted, setIsMuted] = useState(true);
-	const [likes, setLikes] = useState(project.initialLikes);
-	const [hasLiked, setHasLiked] = useState(false);
+	
+	// وضعیت لایک و شمارنده شروع از صفر با قابلیت ذخیره در localStorage
+	const [liked, setLiked] = useState<boolean>(false);
+	const [likeCount, setLikeCount] = useState<number>(0);
+
+	useEffect(() => {
+		const savedLikeState = localStorage.getItem(`video_liked_${index}`);
+		const savedLikeCount = localStorage.getItem(`video_count_${index}`);
+		
+		if (savedLikeState !== null) {
+			setLiked(JSON.parse(savedLikeState));
+		} else {
+			setLiked(false);
+		}
+
+		if (savedLikeCount !== null) {
+			setLikeCount(Number(savedLikeCount));
+		} else {
+			setLikeCount(0);
+		}
+	}, [index]);
 
 	useEffect(() => {
 		const video = videoRef.current;
@@ -194,15 +213,16 @@ function VideoSlide({
 		}
 	};
 
-	const handleLike = (e: React.MouseEvent) => {
+	const handleLikeToggle = (e: React.MouseEvent) => {
 		e.stopPropagation();
-		if (!hasLiked) {
-			setLikes((prev) => prev + 1);
-			setHasLiked(true);
-		} else {
-			setLikes((prev) => prev - 1);
-			setHasLiked(false);
-		}
+		const newLikedState = !liked;
+		const newCount = newLikedState ? likeCount + 1 : likeCount - 1;
+		
+		setLiked(newLikedState);
+		setLikeCount(newCount);
+
+		localStorage.setItem(`video_liked_${index}`, JSON.stringify(newLikedState));
+		localStorage.setItem(`video_count_${index}`, newCount.toString());
 	};
 
 	return (
@@ -330,15 +350,16 @@ function VideoSlide({
 					0{index + 1} / 0{total}
 				</div>
 
+				{/* دکمه لایک و شمارنده با تم فیروزه‌ای و ذخیره پایدار */}
 				<button
 					type="button"
-					onClick={handleLike}
+					onClick={handleLikeToggle}
 					style={{
 						position: "absolute",
 						top: "10px",
 						left: "10px",
 						background: "rgba(0,0,0,0.6)",
-						border: `1px solid ${hasLiked ? "#2ec4b6" : "rgba(46, 196, 182, 0.4)"}`,
+						border: `1px solid ${liked ? "#2ec4b6" : "rgba(46, 196, 182, 0.4)"}`,
 						color: "#2ec4b6",
 						borderRadius: "4px",
 						padding: "3px 6px",
@@ -352,8 +373,8 @@ function VideoSlide({
 						transition: "all 0.2s ease"
 					}}
 				>
-					<Heart size={13} fill={hasLiked ? "#2ec4b6" : "none"} />
-					<span>{likes}</span>
+					<Heart size={13} fill={liked ? "#2ec4b6" : "none"} />
+					<span>{likeCount}</span>
 				</button>
 
 				<div style={{
@@ -580,5 +601,4 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-				}
-			
+}
