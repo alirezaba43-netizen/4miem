@@ -20,7 +20,7 @@ const copy = {
 	en: {
 		hint: "Press the button below to play or pause the video, and use the arrows or swipe to change the screen.",
 		pause: "Pause video on monitor",
-        play: "Play video on monitor",
+		play: "Play video on monitor",
 		prev: "Previous video",
 		next: "Next video",
 		switchLang: "تغییر به فارسی",
@@ -140,9 +140,6 @@ function VideoSlide({
 	direction,
 	onPrev,
 	onNext,
-	onTouchStart,
-	onTouchMove,
-	onTouchEnd,
 	slideVariants,
 	t
 }: {
@@ -153,16 +150,12 @@ function VideoSlide({
 	direction: number;
 	onPrev: () => void;
 	onNext: () => void;
-	onTouchStart: (e: React.TouchEvent) => void;
-	onTouchMove: (e: React.TouchEvent) => void;
-	onTouchEnd: () => void;
 	slideVariants: any;
 	t: typeof copy["fa"];
 }) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [isMuted, setIsMuted] = useState(true);
 	
-	// وضعیت لایک و شمارنده شروع از صفر با قابلیت ذخیره در localStorage
 	const [liked, setLiked] = useState<boolean>(false);
 	const [likeCount, setLikeCount] = useState<number>(0);
 
@@ -225,6 +218,15 @@ function VideoSlide({
 		localStorage.setItem(`video_count_${index}`, newCount.toString());
 	};
 
+	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
+		const threshold = 80;
+		if (info.offset.x > threshold || info.velocity.x > 300) {
+			onPrev();
+		} else if (info.offset.x < -threshold || info.velocity.x < -300) {
+			onNext();
+		}
+	};
+
 	return (
 		<motion.div 
 			custom={direction}
@@ -238,9 +240,10 @@ function VideoSlide({
 				opacity: { duration: 0.25 },
 				scale: { duration: 0.25 }
 			}}
-			onTouchStart={onTouchStart}
-			onTouchMove={onTouchMove}
-			onTouchEnd={onTouchEnd}
+			drag="x"
+			dragConstraints={{ left: 0, right: 0 }}
+			dragElastic={0.9}
+			onDragEnd={handleDragEnd}
 			style={{
 				position: "absolute",
 				width: "220px",
@@ -254,9 +257,11 @@ function VideoSlide({
 				flexDirection: "column",
 				alignItems: "center",
 				pointerEvents: "auto",
-				touchAction: "pan-y",
-				transformStyle: "preserve-3d"
+				touchAction: "none",
+				transformStyle: "preserve-3d",
+				cursor: "grab"
 			}}
+			whileTap={{ cursor: "grabbing" }}
 		>
 			<button 
 				type="button"
@@ -331,7 +336,8 @@ function VideoSlide({
 						width: "100%",
 						height: "100%",
 						objectFit: "cover",
-						display: "block"
+						display: "block",
+						pointerEvents: "none"
 					}}
 				/>
 
@@ -350,7 +356,6 @@ function VideoSlide({
 					0{index + 1} / 0{total}
 				</div>
 
-				{/* دکمه لایک و شمارنده با تم فیروزه‌ای و ذخیره پایدار */}
 				<button
 					type="button"
 					onClick={handleLikeToggle}
@@ -440,9 +445,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	const [direction, setDirection] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
 
-	const touchStartX = useRef(0);
-	const touchEndX = useRef(0);
-
 	const handleNext = () => {
 		setDirection(1);
 		setIsPlaying(false);
@@ -453,23 +455,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 		setDirection(-1);
 		setIsPlaying(false);
 		setCurrentIndex((prev) => (prev === 0 ? portfolioProjects.length - 1 : prev - 1));
-	};
-
-	const handleTouchStart = (e: React.TouchEvent) => {
-		touchStartX.current = e.touches[0].clientX;
-	};
-
-	const handleTouchMove = (e: React.TouchEvent) => {
-		touchEndX.current = e.touches[0].clientX;
-	};
-
-	const handleTouchEnd = () => {
-		if (!touchStartX.current || !touchEndX.current) return;
-		const distance = touchStartX.current - touchEndX.current;
-		if (distance > 50) handleNext();
-		else if (distance < -50) handlePrev();
-		touchStartX.current = 0;
-		touchEndX.current = 0;
 	};
 
 	const handleTogglePlay = () => {
@@ -547,9 +532,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							direction={direction}
 							onPrev={handlePrev}
 							onNext={handleNext}
-							onTouchStart={handleTouchStart}
-							onTouchMove={handleTouchMove}
-							onTouchEnd={handleTouchEnd}
 							slideVariants={slideVariants}
 							t={t}
 						/>
@@ -601,4 +583,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-}
+				}
+	
