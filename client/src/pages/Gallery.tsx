@@ -4,7 +4,7 @@ import { useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Sparkles, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize, Heart } from "lucide-react";
-import { motion, useMotionValue } from "framer-motion";
+import { motion, animate } from "framer-motion";
 
 type Lang = "fa" | "en";
 
@@ -352,27 +352,80 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isPlaying, setIsPlaying] = useState(false);
 
-	const x = useMotionValue(0);
-	const itemWidth = 225;
 	const totalProjects = portfolioProjects.length;
+	const itemWidth = 225; // عرض کارت + گپ
+	
+	// ساخت آرایه چرخشی بی‌نهایت با تکرار مانیتور اول در آخر و مانیتور آخر در اول (برای لوپ ممتد)
+	const extendedProjects = useMemo(() => {
+		if (totalProjects === 0) return [];
+		return [
+			portfolioProjects[totalProjects - 1], // کپی از آخر برای سمت چپِ اولی
+			...portfolioProjects,
+			portfolioProjects[0]                 // کپی از اول برای سمت راستِ آخری
+		];
+	}, [totalProjects]);
 
-	// استفاده از فرمول باقی‌مانده (%) برای لوپ شدن خودکار بی‌نهایت (بدون نیاز به تغییر در صورت اضافه شدن ویدیوها)
-	const handleNext = () => {
+	// موقعیت اولیه روی ایندکس ۱ تنظیم می‌شود چون مانیتور صفرم در واقع کپیِ آخر است
+	const x = useRef(-(currentIndex + 1) * itemWidth);
+	const trackRef = useRef<HTMLDivElement>(null);
+
+	const animateToIndex = (targetIndex: number, immediate = false) => {
 		setIsPlaying(false);
-		setCurrentIndex((prev) => {
-			const nextIdx = (prev + 1) % totalProjects;
-			x.set(-nextIdx * itemWidth);
-			return nextIdx;
-		});
+		const newPos = -(targetIndex + 1) * itemWidth;
+		
+		if (trackRef.current) {
+			if (immediate) {
+				x.current = newPos;
+				trackRef.current.style.transform = `translateX(${newPos}px)`;
+			} else {
+				animate(x.current, newPos, {
+					type: "spring",
+					stiffness: 320,
+					damping: 28,
+					onUpdate: (latest) => {
+						x.current = latest;
+						if (trackRef.current) {
+							trackRef.current.style.transform = `translateX(${latest}px)`;
+						}
+					}
+				});
+			}
+		}
+		setCurrentIndex(targetIndex);
+	};
+
+	const handleNext = () => {
+		const nextIndex = (currentIndex + 1) % totalProjects;
+		if (currentIndex === totalProjects - 1) {
+			// اگر از آخرین ویدیو رد شدیم، اول به صورت نرم می‌رویم روی کپیِ اول، بعد بدون انیمیشن می‌پریم سر جای اصلی
+			animateToIndex(0);
+			setTimeout(() => {
+				if (trackRef.current) {
+					trackRef.current.style.transition = "none";
+					x.current = -1 * itemWidth;
+					trackRef.current.style.transform = `translateX(${-1 * itemWidth}px)`;
+				}
+			}, 300);
+		} else {
+			animateToIndex(nextIndex);
+		}
 	};
 
 	const handlePrev = () => {
-		setIsPlaying(false);
-		setCurrentIndex((prev) => {
-			const prevIdx = (prev - 1 + totalProjects) % totalProjects;
-			x.set(-prevIdx * itemWidth);
-			return prevIdx;
-		});
+		const prevIndex = (currentIndex - 1 + totalProjects) % totalProjects;
+		if (currentIndex === 0) {
+			// اگر از اولین ویدیو رفتیم عقب، اول می‌رویم روی کپیِ آخر، بعد بدون انیمیشن برمی‌گردیم روی آخرین ویدیو اصلی
+			animateToIndex(totalProjects - 1);
+			setTimeout(() => {
+				if (trackRef.current) {
+					trackRef.current.style.transition = "none";
+					x.current = -totalProjects * itemWidth;
+					trackRef.current.style.transform = `translateX(${-totalProjects * itemWidth}px)`;
+				}
+			}, 300);
+		} else {
+			animateToIndex(prevIndex);
+		}
 	};
 
 	const handleTogglePlay = () => {
@@ -386,7 +439,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 		} else if (info.offset.x > threshold || info.velocity.x > 250) {
 			handlePrev();
 		} else {
-			x.set(-currentIndex * itemWidth);
+			animateToIndex(currentIndex);
 		}
 	};
 
@@ -435,7 +488,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						width: "240px",
 						height: "350px"
 					}}>
-						{/* دکمه قبلی (همیشه فعال برای لوپ چرخشی) */}
+						{/* دکمه قبلی ثابت */}
 						<button 
 							type="button"
 							aria-label={t.prev}
@@ -463,6 +516,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							<ChevronLeft size={20} />
 						</button>
 
+						{/* کادر فرضی با قابلیت نمایش ممتد و لوپ بی‌نهایت */}
 						<div style={{
 							width: "205px",
 							height: "330px",
@@ -472,37 +526,45 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							alignItems: "center"
 						}}>
 							<motion.div
+								ref={trackRef}
 								drag="x"
 								dragConstraints={{
-									left: -(totalProjects - 1) * itemWidth,
+									left: -(extendedProjects.length - 1) * itemWidth,
 									right: 0
 								}}
 								style={{
-									x,
 									display: "flex",
 									gap: "20px",
 									pointerEvents: "auto",
 									cursor: "grab",
-									touchAction: "pan-y"
+									touchAction: "pan-y",
+									x: -(currentIndex + 1) * itemWidth
 								}}
 								whileTap={{ cursor: "grabbing" }}
 								onDragEnd={handleDragEnd}
-								animate={{ x: -currentIndex * itemWidth }}
-								transition={{ type: "spring", stiffness: 350, damping: 30 }}
 							>
-								{portfolioProjects.map((project, idx) => (
-									<SingleSlide
-										key={project.id}
-										project={project}
-										index={idx}
-										total={totalProjects}
-										isPlaying={isPlaying && currentIndex === idx}
-									/>
-								))}
+								{extendedProjects.map((project, idx) => {
+									// محاسبه ایندکس اصلی برای نمایش صحیح شماره ویدیوها و لایک‌ها
+									const realIndex = idx === 0 
+										? totalProjects - 1 
+										: idx === extendedProjects.length - 1 
+										? 0 
+										: idx - 1;
+
+									return (
+										<SingleSlide
+											key={`${project.id}-${idx}`}
+											project={project}
+											index={realIndex}
+											total={totalProjects}
+											isPlaying={isPlaying && currentIndex === realIndex}
+										/>
+									);
+								})}
 							</motion.div>
 						</div>
 
-						{/* دکمه بعدی (همیشه فعال برای لوپ چرخشی) */}
+						{/* دکمه بعدی ثابت */}
 						<button 
 							type="button"
 							aria-label={t.next}
@@ -578,3 +640,4 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 		</main>
 	);
 }
+	
