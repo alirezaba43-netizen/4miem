@@ -4,7 +4,7 @@ import { useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Sparkles, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize, Heart } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue } from "framer-motion";
 
 type Lang = "fa" | "en";
 
@@ -132,20 +132,16 @@ function DeskScene({ onOpenAi }: { onOpenAi: () => void }) {
 	);
 }
 
-function VideoSlide({
+function SingleSlide({
 	project,
 	index,
 	total,
-	isPlaying,
-	onNext,
-	onPrev
+	isPlaying
 }: {
 	project: typeof portfolioProjects[0];
 	index: number;
 	total: number;
 	isPlaying: boolean;
-	onNext: () => void;
-	onPrev: () => void;
 }) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [isMuted, setIsMuted] = useState(true);
@@ -212,44 +208,21 @@ function VideoSlide({
 		localStorage.setItem(`video_count_${index}`, newCount.toString());
 	};
 
-	// قانون دقیق برای کشیدن (Drag): فقط اگر از حد مشخصی گذشت اسلاید عوض شود، وگرنه برگردد سر جایش
-	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-		const swipeThreshold = 90; // مقدار جابجایی لازم برای عوض شدن اسلاید
-		if (info.offset.x > swipeThreshold || info.velocity.x > 400) {
-			onPrev();
-		} else if (info.offset.x < -swipeThreshold || info.velocity.x < -400) {
-			onNext();
-		}
-	};
-
 	return (
-		<motion.div 
-			initial={{ opacity: 0, scale: 0.95 }}
-			animate={{ opacity: 1, scale: 1 }}
-			exit={{ opacity: 0, scale: 0.95 }}
-			transition={{ duration: 0.2, ease: "easeOut" }}
-			drag="x"
-			dragConstraints={{ left: 0, right: 0 }}
-			dragElastic={0.8}
-			onDragEnd={handleDragEnd}
-			style={{
-				width: "205px",
-				height: "330px",
-				background: "#14181a",
-				borderRadius: "12px",
-				padding: "7px",
-				boxShadow: "0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(46, 196, 182, 0.2)",
-				border: "2px solid #22282a",
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				pointerEvents: "auto",
-				touchAction: "none",
-				cursor: "grab",
-				flexShrink: 0
-			}}
-			whileTap={{ cursor: "grabbing" }}
-		>
+		<div style={{
+			width: "205px",
+			height: "330px",
+			background: "#14181a",
+			borderRadius: "12px",
+			padding: "7px",
+			boxShadow: "0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(46, 196, 182, 0.2)",
+			border: "2px solid #22282a",
+			display: "flex",
+			flexDirection: "column",
+			alignItems: "center",
+			flexShrink: 0,
+			userSelect: "none"
+		}}>
 			<div style={{
 				width: "100%",
 				height: "100%",
@@ -370,7 +343,7 @@ function VideoSlide({
 				boxShadow: `0 0 6px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
 				marginTop: "6px"
 			}} />
-		</motion.div>
+		</div>
 	);
 }
 
@@ -379,18 +352,41 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isPlaying, setIsPlaying] = useState(false);
 
+	const x = useMotionValue(0);
+	const itemWidth = 225; // فاصله بین هر مانیتور (عرض کارت + گپ)
+
 	const handleNext = () => {
 		setIsPlaying(false);
-		setCurrentIndex((prev) => (prev === portfolioProjects.length - 1 ? 0 : prev + 1));
+		setCurrentIndex((prev) => {
+			const nextIdx = Math.min(prev + 1, portfolioProjects.length - 1);
+			x.set(-nextIdx * itemWidth);
+			return nextIdx;
+		});
 	};
 
 	const handlePrev = () => {
 		setIsPlaying(false);
-		setCurrentIndex((prev) => (prev === 0 ? portfolioProjects.length - 1 : prev - 1));
+		setCurrentIndex((prev) => {
+			const prevIdx = Math.max(prev - 1, 0);
+			x.set(-prevIdx * itemWidth);
+			return prevIdx;
+		});
 	};
 
 	const handleTogglePlay = () => {
 		setIsPlaying((prev) => !prev);
+	};
+
+	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
+		const threshold = 60;
+		if (info.offset.x < -threshold || info.velocity.x < -300) {
+			handleNext();
+		} else if (info.offset.x > threshold || info.velocity.x > 300) {
+			handlePrev();
+		} else {
+			// اگر به اندازه کافی کشیده نشد، نرم برگردد سر جای خودش
+			x.set(-currentIndex * itemWidth);
+		}
 	};
 
 	return (
@@ -430,21 +426,25 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						pointerEvents: "none"
 					}}
 				>
+					{/* این همان کادر فرضی است که overflow: hidden دارد تا بقیه مانیتورها مخفی باشند */}
 					<div style={{
 						position: "relative",
 						display: "flex",
 						alignItems: "center",
-						justifyContent: "center",
-						width: "240px",
-						height: "350px"
+						justifyContent: "flex-start",
+						width: "205px",
+						height: "330px",
+						overflow: "hidden",
+						borderRadius: "12px"
 					}}>
+						{/* دکمه قبلی ثابت بیرون از کادر */}
 						<button 
 							type="button"
 							aria-label={t.prev}
 							onClick={handlePrev}
 							style={{
 								position: "absolute",
-								left: "-42px",
+								left: "-48px",
 								top: "50%",
 								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
@@ -459,31 +459,52 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
+								boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
+								opacity: currentIndex === 0 ? 0.3 : 1
 							}}
 						>
 							<ChevronLeft size={20} />
 						</button>
 
-						<AnimatePresence mode="wait">
-							<VideoSlide
-								key={currentIndex}
-								project={portfolioProjects[currentIndex]}
-								index={currentIndex}
-								total={portfolioProjects.length}
-								isPlaying={isPlaying}
-								onNext={handleNext}
-								onPrev={handlePrev}
-							/>
-						</AnimatePresence>
+						{/* ریل افقی متصل که مانیتورها پشت سر هم چیده شده‌اند اما فقط داخل کادر دیده می‌شوند */}
+						<motion.div
+							drag="x"
+							dragConstraints={{
+								left: -(portfolioProjects.length - 1) * itemWidth,
+								right: 0
+							}}
+							style={{
+								x,
+								display: "flex",
+								gap: "20px",
+								pointerEvents: "auto",
+								cursor: "grab",
+								touchAction: "pan-y"
+							}}
+							whileTap={{ cursor: "grabbing" }}
+							onDragEnd={handleDragEnd}
+							animate={{ x: -currentIndex * itemWidth }}
+							transition={{ type: "spring", stiffness: 350, damping: 30 }}
+						>
+							{portfolioProjects.map((project, idx) => (
+								<SingleSlide
+									key={project.id}
+									project={project}
+									index={idx}
+									total={portfolioProjects.length}
+									isPlaying={isPlaying && currentIndex === idx}
+								/>
+							))}
+						</motion.div>
 
+						{/* دکمه بعدی ثابت بیرون از کادر */}
 						<button 
 							type="button"
 							aria-label={t.next}
 							onClick={handleNext}
 							style={{
 								position: "absolute",
-								right: "-42px",
+								right: "-48px",
 								top: "50%",
 								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
@@ -498,7 +519,8 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
+								boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
+								opacity: currentIndex === portfolioProjects.length - 1 ? 0.3 : 1
 							}}
 						>
 							<ChevronRight size={20} />
@@ -551,5 +573,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-		}
-				
+								  }
+								
