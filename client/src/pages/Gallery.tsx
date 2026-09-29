@@ -138,20 +138,18 @@ function VideoSlide({
 	total,
 	isPlaying,
 	direction,
-	onPrev,
 	onNext,
-	slideVariants,
-	t
+	onPrev,
+	slideVariants
 }: {
 	project: typeof portfolioProjects[0];
 	index: number;
 	total: number;
 	isPlaying: boolean;
 	direction: number;
-	onPrev: () => void;
 	onNext: () => void;
+	onPrev: () => void;
 	slideVariants: any;
-	t: typeof copy["fa"];
 }) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [isMuted, setIsMuted] = useState(true);
@@ -219,7 +217,7 @@ function VideoSlide({
 	};
 
 	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-		const threshold = 80;
+		const threshold = 70;
 		if (info.offset.x > threshold || info.velocity.x > 300) {
 			onPrev();
 		} else if (info.offset.x < -threshold || info.velocity.x < -300) {
@@ -235,17 +233,15 @@ function VideoSlide({
 			animate="center"
 			exit="exit"
 			transition={{
-				x: { type: "spring", stiffness: 280, damping: 25 },
-				rotateY: { type: "spring", stiffness: 280, damping: 25 },
-				opacity: { duration: 0.25 },
-				scale: { duration: 0.25 }
+				x: { type: "spring", stiffness: 300, damping: 26 },
+				opacity: { duration: 0.2 },
+				scale: { duration: 0.2 }
 			}}
 			drag="x"
 			dragConstraints={{ left: 0, right: 0 }}
-			dragElastic={0.9}
+			dragElastic={0.7}
 			onDragEnd={handleDragEnd}
 			style={{
-				position: "absolute",
 				width: "220px",
 				height: "350px",
 				background: "#14181a",
@@ -258,63 +254,11 @@ function VideoSlide({
 				alignItems: "center",
 				pointerEvents: "auto",
 				touchAction: "none",
-				transformStyle: "preserve-3d",
-				cursor: "grab"
+				cursor: "grab",
+				flexShrink: 0
 			}}
 			whileTap={{ cursor: "grabbing" }}
 		>
-			<button 
-				type="button"
-				aria-label={t.prev}
-				onClick={onPrev}
-				style={{
-					position: "absolute",
-					left: "-55px",
-					top: "50%",
-					transform: "translateY(-50%)",
-					background: "rgba(20, 24, 26, 0.95)",
-					border: "1px solid #2ec4b6",
-					color: "#2ec4b6",
-					borderRadius: "50%",
-					width: "40px",
-					height: "40px",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					cursor: "pointer",
-					zIndex: 30,
-					boxShadow: "0 4px 15px rgba(0,0,0,0.7)"
-				}}
-			>
-				<ChevronLeft size={22} />
-			</button>
-
-			<button 
-				type="button"
-				aria-label={t.next}
-				onClick={onNext}
-				style={{
-					position: "absolute",
-					right: "-55px",
-					top: "50%",
-					transform: "translateY(-50%)",
-					background: "rgba(20, 24, 26, 0.95)",
-					border: "1px solid #2ec4b6",
-					color: "#2ec4b6",
-					borderRadius: "50%",
-					width: "40px",
-					height: "40px",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					cursor: "pointer",
-					zIndex: 30,
-					boxShadow: "0 4px 15px rgba(0,0,0,0.7)"
-				}}
-			>
-				<ChevronRight size={22} />
-			</button>
-
 			<div style={{
 				width: "100%",
 				height: "100%",
@@ -462,25 +406,22 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	};
 
 	const slideVariants = {
-		enter: (direction: number) => ({
-			x: direction > 0 ? 150 : -150,
-			rotateY: direction > 0 ? 45 : -45,
+		enter: (dir: number) => ({
+			x: dir > 0 ? 120 : -120,
 			opacity: 0,
-			scale: 0.85
+			scale: 0.9
 		}),
 		center: {
 			zIndex: 1,
 			x: 0,
-			rotateY: 0,
 			opacity: 1,
 			scale: 1
 		},
-		exit: (direction: number) => ({
+		exit: (dir: number) => ({
 			zIndex: 0,
-			x: direction < 0 ? 150 : -150,
-			rotateY: direction < 0 ? 45 : -45,
+			x: dir < 0 ? 120 : -120,
 			opacity: 0,
-			scale: 0.85
+			scale: 0.9
 		})
 	};
 
@@ -510,6 +451,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 					<DeskScene onOpenAi={onOpenAi} />
 				</Canvas>
 
+				{/* قاب محافظ (Container) مشخص برای کنترل ابعاد در دسکتاپ و موبایل */}
 				<div 
 					style={{
 						position: "absolute",
@@ -518,24 +460,88 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						alignItems: "center",
 						justifyContent: "center",
 						zIndex: 20,
-						pointerEvents: "none",
-						perspective: "1000px"
+						pointerEvents: "none"
 					}}
 				>
-					<AnimatePresence initial={false} custom={direction} mode="popLayout">
-						<VideoSlide
-							key={currentIndex}
-							project={portfolioProjects[currentIndex]}
-							index={currentIndex}
-							total={portfolioProjects.length}
-							isPlaying={isPlaying}
-							direction={direction}
-							onPrev={handlePrev}
-							onNext={handleNext}
-							slideVariants={slideVariants}
-							t={t}
-						/>
-					</AnimatePresence>
+					<div style={{
+						position: "relative",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						width: "280px",
+						height: "370px"
+					}}>
+						{/* دکمه قبلی ثابت */}
+						<button 
+							type="button"
+							aria-label={t.prev}
+							onClick={handlePrev}
+							style={{
+								position: "absolute",
+								left: "-60px",
+								top: "50%",
+								transform: "translateY(-50px)",
+								background: "rgba(20, 24, 26, 0.95)",
+								border: "1px solid #2ec4b6",
+								color: "#2ec4b6",
+								borderRadius: "50%",
+								width: "40px",
+								height: "40px",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								cursor: "pointer",
+								zIndex: 30,
+								pointerEvents: "auto",
+								boxShadow: "0 4px 15px rgba(0,0,0,0.7)"
+							}}
+						>
+							<ChevronLeft size={22} />
+						</button>
+
+						{/* اسلاید مانیتور متحرک و قابل کشیدن */}
+						<AnimatePresence initial={false} custom={direction} mode="popLayout">
+							<VideoSlide
+								key={currentIndex}
+								project={portfolioProjects[currentIndex]}
+								index={currentIndex}
+								total={portfolioProjects.length}
+								isPlaying={isPlaying}
+								direction={direction}
+								onNext={handleNext}
+								onPrev={handlePrev}
+								slideVariants={slideVariants}
+							/>
+						</AnimatePresence>
+
+						{/* دکمه بعدی ثابت */}
+						<button 
+							type="button"
+							aria-label={t.next}
+							onClick={handleNext}
+							style={{
+								position: "absolute",
+								right: "-60px",
+								top: "50%",
+								transform: "translateY(-50px)",
+								background: "rgba(20, 24, 26, 0.95)",
+								border: "1px solid #2ec4b6",
+								color: "#2ec4b6",
+								borderRadius: "50%",
+								width: "40px",
+								height: "40px",
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								cursor: "pointer",
+								zIndex: 30,
+								pointerEvents: "auto",
+								boxShadow: "0 4px 15px rgba(0,0,0,0.7)"
+							}}
+						>
+							<ChevronRight size={22} />
+						</button>
+					</div>
 				</div>
 
 				<div style={{ position: "absolute", bottom: "130px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
@@ -583,5 +589,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-				}
-	
+						}
+				
