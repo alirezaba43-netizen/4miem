@@ -212,11 +212,12 @@ function VideoSlide({
 		localStorage.setItem(`video_count_${index}`, newCount.toString());
 	};
 
+	// قانون دقیق برای کشیدن (Drag): فقط اگر از حد مشخصی گذشت اسلاید عوض شود، وگرنه برگردد سر جایش
 	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-		const threshold = 50;
-		if (info.offset.x > threshold || info.velocity.x > 200) {
+		const swipeThreshold = 90; // مقدار جابجایی لازم برای عوض شدن اسلاید
+		if (info.offset.x > swipeThreshold || info.velocity.x > 400) {
 			onPrev();
-		} else if (info.offset.x < -threshold || info.velocity.x < -200) {
+		} else if (info.offset.x < -swipeThreshold || info.velocity.x < -400) {
 			onNext();
 		}
 	};
@@ -226,10 +227,10 @@ function VideoSlide({
 			initial={{ opacity: 0, scale: 0.95 }}
 			animate={{ opacity: 1, scale: 1 }}
 			exit={{ opacity: 0, scale: 0.95 }}
-			transition={{ duration: 0.15, ease: "easeOut" }}
+			transition={{ duration: 0.2, ease: "easeOut" }}
 			drag="x"
 			dragConstraints={{ left: 0, right: 0 }}
-			dragElastic={0.4}
+			dragElastic={0.8}
 			onDragEnd={handleDragEnd}
 			style={{
 				width: "205px",
@@ -550,5 +551,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-					}
-							
+		}
+				
