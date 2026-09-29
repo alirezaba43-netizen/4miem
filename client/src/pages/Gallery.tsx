@@ -217,10 +217,10 @@ function VideoSlide({
 	};
 
 	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-		const threshold = 70;
-		if (info.offset.x > threshold || info.velocity.x > 300) {
+		const threshold = 50;
+		if (info.offset.x > threshold || info.velocity.x > 250) {
 			onPrev();
-		} else if (info.offset.x < -threshold || info.velocity.x < -300) {
+		} else if (info.offset.x < -threshold || info.velocity.x < -250) {
 			onNext();
 		}
 	};
@@ -233,21 +233,20 @@ function VideoSlide({
 			animate="center"
 			exit="exit"
 			transition={{
-				x: { type: "spring", stiffness: 300, damping: 26 },
-				opacity: { duration: 0.2 },
-				scale: { duration: 0.2 }
+				x: { type: "spring", stiffness: 350, damping: 30 },
+				opacity: { duration: 0.15 }
 			}}
 			drag="x"
 			dragConstraints={{ left: 0, right: 0 }}
-			dragElastic={0.7}
+			dragElastic={0.5}
 			onDragEnd={handleDragEnd}
 			style={{
-				width: "220px",
-				height: "350px",
+				width: "205px",
+				height: "330px",
 				background: "#14181a",
 				borderRadius: "12px",
-				padding: "8px",
-				boxShadow: "0 25px 60px rgba(0,0,0,0.95), 0 0 35px rgba(46, 196, 182, 0.25)",
+				padding: "7px",
+				boxShadow: "0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(46, 196, 182, 0.2)",
 				border: "2px solid #22282a",
 				display: "flex",
 				flexDirection: "column",
@@ -287,13 +286,13 @@ function VideoSlide({
 
 				<div style={{
 					position: "absolute",
-					top: "10px",
-					right: "10px",
+					top: "8px",
+					right: "8px",
 					background: "rgba(0,0,0,0.6)",
 					color: "#2ec4b6",
-					padding: "2px 8px",
+					padding: "2px 6px",
 					borderRadius: "4px",
-					fontSize: "10px",
+					fontSize: "9px",
 					fontWeight: "bold",
 					zIndex: 5
 				}}>
@@ -305,32 +304,32 @@ function VideoSlide({
 					onClick={handleLikeToggle}
 					style={{
 						position: "absolute",
-						top: "10px",
-						left: "10px",
+						top: "8px",
+						left: "8px",
 						background: "rgba(0,0,0,0.6)",
 						border: `1px solid ${liked ? "#2ec4b6" : "rgba(46, 196, 182, 0.4)"}`,
 						color: "#2ec4b6",
 						borderRadius: "4px",
-						padding: "3px 6px",
+						padding: "2px 5px",
 						cursor: "pointer",
 						display: "flex",
 						alignItems: "center",
-						gap: "4px",
-						fontSize: "10px",
+						gap: "3px",
+						fontSize: "9px",
 						fontWeight: "bold",
 						zIndex: 5,
 						transition: "all 0.2s ease"
 					}}
 				>
-					<Heart size={13} fill={liked ? "#2ec4b6" : "none"} />
+					<Heart size={12} fill={liked ? "#2ec4b6" : "none"} />
 					<span>{likeCount}</span>
 				</button>
 
 				<div style={{
 					position: "absolute",
-					bottom: "10px",
-					left: "10px",
-					right: "10px",
+					bottom: "8px",
+					left: "8px",
+					right: "8px",
 					display: "flex",
 					justifyContent: "space-between",
 					zIndex: 10
@@ -343,13 +342,13 @@ function VideoSlide({
 							border: "1px solid rgba(46, 196, 182, 0.4)",
 							color: "#2ec4b6",
 							borderRadius: "4px",
-							padding: "4px 6px",
+							padding: "3px 5px",
 							cursor: "pointer",
 							display: "flex",
 							alignItems: "center"
 						}}
 					>
-						{isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+						{isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
 					</button>
 
 					<button
@@ -360,24 +359,24 @@ function VideoSlide({
 							border: "1px solid rgba(46, 196, 182, 0.4)",
 							color: "#2ec4b6",
 							borderRadius: "4px",
-							padding: "4px 6px",
+							padding: "3px 5px",
 							cursor: "pointer",
 							display: "flex",
 							alignItems: "center"
 						}}
 					>
-						<Maximize size={14} />
+						<Maximize size={13} />
 					</button>
 				</div>
 			</div>
 
 			<div style={{
-				width: "6px",
-				height: "6px",
+				width: "5px",
+				height: "5px",
 				borderRadius: "50%",
 				background: isPlaying ? "#ffd166" : "#2ec4b6",
-				boxShadow: `0 0 8px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
-				marginTop: "8px"
+				boxShadow: `0 0 6px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
+				marginTop: "6px"
 			}} />
 		</motion.div>
 	);
@@ -407,21 +406,18 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 
 	const slideVariants = {
 		enter: (dir: number) => ({
-			x: dir > 0 ? 120 : -120,
-			opacity: 0,
-			scale: 0.9
+			x: dir > 0 ? 80 : -80,
+			opacity: 0
 		}),
 		center: {
 			zIndex: 1,
 			x: 0,
-			opacity: 1,
-			scale: 1
+			opacity: 1
 		},
 		exit: (dir: number) => ({
 			zIndex: 0,
-			x: dir < 0 ? 120 : -120,
-			opacity: 0,
-			scale: 0.9
+			x: dir < 0 ? 80 : -80,
+			opacity: 0
 		})
 	};
 
@@ -451,7 +447,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 					<DeskScene onOpenAi={onOpenAi} />
 				</Canvas>
 
-				{/* قاب محافظ (Container) مشخص برای کنترل ابعاد در دسکتاپ و موبایل */}
+				{/* قاب محافظ جمع‌وجور و تراز شده برای موبایل و دسکتاپ */}
 				<div 
 					style={{
 						position: "absolute",
@@ -468,38 +464,38 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
-						width: "280px",
-						height: "370px"
+						width: "240px",
+						height: "350px"
 					}}>
-						{/* دکمه قبلی ثابت */}
+						{/* دکمه قبلی نزدیک‌تر به قاب */}
 						<button 
 							type="button"
 							aria-label={t.prev}
 							onClick={handlePrev}
 							style={{
 								position: "absolute",
-								left: "-60px",
+								left: "-42px",
 								top: "50%",
-								transform: "translateY(-50px)",
+								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
 								border: "1px solid #2ec4b6",
 								color: "#2ec4b6",
 								borderRadius: "50%",
-								width: "40px",
-								height: "40px",
+								width: "35px",
+								height: "35px",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 15px rgba(0,0,0,0.7)"
+								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
 							}}
 						>
-							<ChevronLeft size={22} />
+							<ChevronLeft size={20} />
 						</button>
 
-						{/* اسلاید مانیتور متحرک و قابل کشیدن */}
+						{/* مانیتور متحرک بدون لگ */}
 						<AnimatePresence initial={false} custom={direction} mode="popLayout">
 							<VideoSlide
 								key={currentIndex}
@@ -514,32 +510,32 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							/>
 						</AnimatePresence>
 
-						{/* دکمه بعدی ثابت */}
+						{/* دکمه بعدی نزدیک‌تر به قاب */}
 						<button 
 							type="button"
 							aria-label={t.next}
 							onClick={handleNext}
 							style={{
 								position: "absolute",
-								right: "-60px",
+								right: "-42px",
 								top: "50%",
-								transform: "translateY(-50px)",
+								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
 								border: "1px solid #2ec4b6",
 								color: "#2ec4b6",
 								borderRadius: "50%",
-								width: "40px",
-								height: "40px",
+								width: "35px",
+								height: "35px",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 15px rgba(0,0,0,0.7)"
+								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
 							}}
 						>
-							<ChevronRight size={22} />
+							<ChevronRight size={20} />
 						</button>
 					</div>
 				</div>
@@ -589,5 +585,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-						}
-				
+	}
+					
