@@ -353,12 +353,14 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	const [isPlaying, setIsPlaying] = useState(false);
 
 	const x = useMotionValue(0);
-	const itemWidth = 225; // فاصله بین هر مانیتور (عرض کارت + گپ)
+	const itemWidth = 225;
+	const totalProjects = portfolioProjects.length;
 
+	// استفاده از فرمول باقی‌مانده (%) برای لوپ شدن خودکار بی‌نهایت (بدون نیاز به تغییر در صورت اضافه شدن ویدیوها)
 	const handleNext = () => {
 		setIsPlaying(false);
 		setCurrentIndex((prev) => {
-			const nextIdx = Math.min(prev + 1, portfolioProjects.length - 1);
+			const nextIdx = (prev + 1) % totalProjects;
 			x.set(-nextIdx * itemWidth);
 			return nextIdx;
 		});
@@ -367,7 +369,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	const handlePrev = () => {
 		setIsPlaying(false);
 		setCurrentIndex((prev) => {
-			const prevIdx = Math.max(prev - 1, 0);
+			const prevIdx = (prev - 1 + totalProjects) % totalProjects;
 			x.set(-prevIdx * itemWidth);
 			return prevIdx;
 		});
@@ -378,13 +380,12 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 	};
 
 	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-		const threshold = 60;
-		if (info.offset.x < -threshold || info.velocity.x < -300) {
+		const threshold = 50;
+		if (info.offset.x < -threshold || info.velocity.x < -250) {
 			handleNext();
-		} else if (info.offset.x > threshold || info.velocity.x > 300) {
+		} else if (info.offset.x > threshold || info.velocity.x > 250) {
 			handlePrev();
 		} else {
-			// اگر به اندازه کافی کشیده نشد، نرم برگردد سر جای خودش
 			x.set(-currentIndex * itemWidth);
 		}
 	};
@@ -426,25 +427,22 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						pointerEvents: "none"
 					}}
 				>
-					{/* این همان کادر فرضی است که overflow: hidden دارد تا بقیه مانیتورها مخفی باشند */}
 					<div style={{
 						position: "relative",
 						display: "flex",
 						alignItems: "center",
-						justifyContent: "flex-start",
-						width: "205px",
-						height: "330px",
-						overflow: "hidden",
-						borderRadius: "12px"
+						justifyContent: "center",
+						width: "240px",
+						height: "350px"
 					}}>
-						{/* دکمه قبلی ثابت بیرون از کادر */}
+						{/* دکمه قبلی (همیشه فعال برای لوپ چرخشی) */}
 						<button 
 							type="button"
 							aria-label={t.prev}
 							onClick={handlePrev}
 							style={{
 								position: "absolute",
-								left: "-48px",
+								left: "-42px",
 								top: "50%",
 								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
@@ -459,52 +457,59 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
-								opacity: currentIndex === 0 ? 0.3 : 1
+								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
 							}}
 						>
 							<ChevronLeft size={20} />
 						</button>
 
-						{/* ریل افقی متصل که مانیتورها پشت سر هم چیده شده‌اند اما فقط داخل کادر دیده می‌شوند */}
-						<motion.div
-							drag="x"
-							dragConstraints={{
-								left: -(portfolioProjects.length - 1) * itemWidth,
-								right: 0
-							}}
-							style={{
-								x,
-								display: "flex",
-								gap: "20px",
-								pointerEvents: "auto",
-								cursor: "grab",
-								touchAction: "pan-y"
-							}}
-							whileTap={{ cursor: "grabbing" }}
-							onDragEnd={handleDragEnd}
-							animate={{ x: -currentIndex * itemWidth }}
-							transition={{ type: "spring", stiffness: 350, damping: 30 }}
-						>
-							{portfolioProjects.map((project, idx) => (
-								<SingleSlide
-									key={project.id}
-									project={project}
-									index={idx}
-									total={portfolioProjects.length}
-									isPlaying={isPlaying && currentIndex === idx}
-								/>
-							))}
-						</motion.div>
+						<div style={{
+							width: "205px",
+							height: "330px",
+							overflow: "hidden",
+							borderRadius: "12px",
+							display: "flex",
+							alignItems: "center"
+						}}>
+							<motion.div
+								drag="x"
+								dragConstraints={{
+									left: -(totalProjects - 1) * itemWidth,
+									right: 0
+								}}
+								style={{
+									x,
+									display: "flex",
+									gap: "20px",
+									pointerEvents: "auto",
+									cursor: "grab",
+									touchAction: "pan-y"
+								}}
+								whileTap={{ cursor: "grabbing" }}
+								onDragEnd={handleDragEnd}
+								animate={{ x: -currentIndex * itemWidth }}
+								transition={{ type: "spring", stiffness: 350, damping: 30 }}
+							>
+								{portfolioProjects.map((project, idx) => (
+									<SingleSlide
+										key={project.id}
+										project={project}
+										index={idx}
+										total={totalProjects}
+										isPlaying={isPlaying && currentIndex === idx}
+									/>
+								))}
+							</motion.div>
+						</div>
 
-						{/* دکمه بعدی ثابت بیرون از کادر */}
+						{/* دکمه بعدی (همیشه فعال برای لوپ چرخشی) */}
 						<button 
 							type="button"
 							aria-label={t.next}
 							onClick={handleNext}
 							style={{
 								position: "absolute",
-								right: "-48px",
+								right: "-42px",
 								top: "50%",
 								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
@@ -519,8 +524,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
-								opacity: currentIndex === portfolioProjects.length - 1 ? 0.3 : 1
+								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
 							}}
 						>
 							<ChevronRight size={20} />
@@ -573,5 +577,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-								  }
-								
+		}
+						
