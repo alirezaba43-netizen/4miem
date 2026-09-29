@@ -3,8 +3,7 @@ import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocess
 import { useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Sparkles, Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize, Heart } from "lucide-react";
 
 type Lang = "fa" | "en";
 
@@ -28,9 +27,9 @@ const copy = {
 } as const;
 
 const portfolioProjects = [
-  { id: 1, title: "Project One", videoUrl: "/portfolio.mp4" },
-  { id: 2, title: "Project Two", videoUrl: "/portfolio-2.mp4" },
-  { id: 3, title: "Project Three", videoUrl: "/portfolio-3.mp4" },
+  { id: 1, title: "Project One", videoUrl: "/portfolio.mp4", posterUrl: "/portfolio-poster-1.jpg", initialLikes: 142 },
+  { id: 2, title: "Project Two", videoUrl: "/portfolio-2.mp4", posterUrl: "/portfolio-poster-2.jpg", initialLikes: 98 },
+  { id: 3, title: "Project Three", videoUrl: "/portfolio-3.mp4", posterUrl: "/portfolio-poster-3.jpg", initialLikes: 230 },
 ];
 
 function GalleryCamera() {
@@ -132,7 +131,6 @@ function DeskScene({ onOpenAi }: { onOpenAi: () => void }) {
 	);
 }
 
-// کامپوننت مستقل برای هر اسلاید ویدیو به همراه رفرنس ایزوله
 function VideoSlide({
 	project,
 	index,
@@ -161,6 +159,9 @@ function VideoSlide({
 	t: typeof copy["fa"];
 }) {
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const [isMuted, setIsMuted] = useState(true);
+	const [likes, setLikes] = useState(project.initialLikes);
+	const [hasLiked, setHasLiked] = useState(false);
 
 	useEffect(() => {
 		const video = videoRef.current;
@@ -172,6 +173,36 @@ function VideoSlide({
 			video.pause();
 		}
 	}, [isPlaying]);
+
+	const toggleMute = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (videoRef.current) {
+			videoRef.current.muted = !videoRef.current.muted;
+			setIsMuted(videoRef.current.muted);
+		}
+	};
+
+	const requestFullscreen = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (videoRef.current) {
+			if (videoRef.current.requestFullscreen) {
+				videoRef.current.requestFullscreen();
+			} else if ((videoRef.current as any).webkitRequestFullscreen) {
+				(videoRef.current as any).webkitRequestFullscreen();
+			}
+		}
+	};
+
+	const handleLike = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (!hasLiked) {
+			setLikes((prev) => prev + 1);
+			setHasLiked(true);
+		} else {
+			setLikes((prev) => prev - 1);
+			setHasLiked(false);
+		}
+	};
 
 	return (
 		<motion.div 
@@ -270,8 +301,11 @@ function VideoSlide({
 					ref={videoRef}
 					aria-label={project.title}
 					src={project.videoUrl}
+					poster={project.posterUrl}
 					playsInline
 					loop
+					muted
+					preload="none"
 					style={{
 						width: "100%",
 						height: "100%",
@@ -293,6 +327,78 @@ function VideoSlide({
 					zIndex: 5
 				}}>
 					0{index + 1} / 0{total}
+				</div>
+
+				{/* دکمه لایک و شمارنده بالای ویدیو */}
+				<button
+					type="button"
+					onClick={handleLike}
+					style={{
+						position: "absolute",
+						top: "10px",
+						left: "10px",
+						background: "rgba(0,0,0,0.6)",
+						border: `1px solid ${hasLiked ? "#ff4757" : "rgba(46, 196, 182, 0.4)"}`,
+						color: hasLiked ? "#ff4757" : "#2ec4b6",
+						borderRadius: "4px",
+						padding: "3px 6px",
+						cursor: "pointer",
+						display: "flex",
+						alignItems: "center",
+						gap: "4px",
+						fontSize: "10px",
+						fontWeight: "bold",
+						zIndex: 5,
+						transition: "all 0.2s ease"
+					}}
+				>
+					<Heart size={13} fill={hasLiked ? "#ff4757" : "none"} />
+					<span>{likes}</span>
+				</button>
+
+				{/* کنترل‌های پایین ویدیو: صدا و فول اسکرین */}
+				<div style={{
+					position: "absolute",
+					bottom: "10px",
+					left: "10px",
+					right: "10px",
+					display: "flex",
+					justifyContent: "space-between",
+					zIndex: 10
+				}}>
+					<button
+						type="button"
+						onClick={toggleMute}
+						style={{
+							background: "rgba(0,0,0,0.6)",
+							border: "1px solid rgba(46, 196, 182, 0.4)",
+							color: "#2ec4b6",
+							borderRadius: "4px",
+							padding: "4px 6px",
+							cursor: "pointer",
+							display: "flex",
+							alignItems: "center"
+						}}
+					>
+						{isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+					</button>
+
+					<button
+						type="button"
+						onClick={requestFullscreen}
+						style={{
+							background: "rgba(0,0,0,0.6)",
+							border: "1px solid rgba(46, 196, 182, 0.4)",
+							color: "#2ec4b6",
+							borderRadius: "4px",
+							padding: "4px 6px",
+							cursor: "pointer",
+							display: "flex",
+							alignItems: "center"
+						}}
+					>
+						<Maximize size={14} />
+					</button>
 				</div>
 			</div>
 
@@ -379,6 +485,104 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 				<div className="brand-lockup">
 					<span className="brand-symbol">∞</span>
 					<span className="brand-name">4miem<span className="brand-dot">.</span></span>
+				</div>
+				<div className="topbar-status">
+					<span className="status-dot" /> <span>CONTROL ROOM / 2026</span>
+				</div>
+				<button type="button" className="gallery-language" aria-label={t.switchLang} onClick={onToggleLang}>{lang === "fa" ? "EN" : "FA"}</button>
+			</header>
+			
+			<section className="world-section gallery-act" style={{ position: "relative", width: "100%", height: "100dvh", overflow: "hidden" }}>
+				<Canvas 
+					aria-hidden="true"
+					dpr={[1, 1.5]} 
+					camera={{ position: [0, .6, 7.5], fov: 42 }} 
+					gl={{ antialias: true, powerPreference: "high-performance" }} 
+					onCreated={({ gl }) => gl.setClearColor("#030507")}
+					style={{ position: "absolute", inset: 0, zIndex: 1 }}
+				>
+					<GalleryCamera />
+					<DeskScene onOpenAi={onOpenAi} />
+				</Canvas>
+
+				<div 
+					style={{
+						position: "absolute",
+						inset: 0,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						zIndex: 20,
+						pointerEvents: "none",
+						perspective: "1000px"
+					}}
+				>
+					<AnimatePresence initial={false} custom={direction} mode="popLayout">
+						<VideoSlide
+							key={currentIndex}
+							project={portfolioProjects[currentIndex]}
+							index={currentIndex}
+							total={portfolioProjects.length}
+							isPlaying={isPlaying}
+							direction={direction}
+							onPrev={handlePrev}
+							onNext={handleNext}
+							onTouchStart={handleTouchStart}
+							onTouchMove={handleTouchMove}
+							onTouchEnd={handleTouchEnd}
+							slideVariants={slideVariants}
+							t={t}
+						/>
+					</AnimatePresence>
+				</div>
+
+				<div style={{ position: "absolute", bottom: "130px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
+					<button 
+						type="button"
+						lang={lang}
+						onClick={handleTogglePlay}
+						style={{
+							background: isPlaying ? "rgba(255, 209, 102, 0.2)" : "rgba(46, 196, 182, 0.2)",
+							border: `1px solid ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
+							color: "#fff",
+							padding: "10px 22px",
+							borderRadius: "25px",
+							cursor: "pointer",
+							display: "flex",
+							alignItems: "center",
+							gap: "8px",
+							backdropFilter: "blur(6px)",
+							fontSize: "13px",
+							fontWeight: "bold",
+							boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+							transition: "all 0.3s ease"
+						}}
+					>
+						{isPlaying ? <Pause size={16} /> : <Play size={16} />} 
+						{isPlaying ? t.pause : t.play}
+					</button>
+				</div>
+
+				<div className="world-overlay" style={{ pointerEvents: "none", zIndex: 10 }}>
+					<div className="world-rail left">
+						<span>02 / CONTROL ROOM</span>
+						<span className="muted">4MIEM / AI STUDIO</span>
+					</div>
+					<div className="world-copy" style={{ transform: "translate(-50%, -50px)", pointerEvents: "auto" }}>
+						<span className="hero-kicker"><Sparkles size={12} /> ADVANCED WORKSPACE</span>
+						<h1>A desk for<br /><em>new worlds.</em></h1>
+						<p lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>{t.hint}</p>
+					</div>
+					<div className="world-rail right">
+						<span>IDEAS IN / IMAGES OUT</span>
+						<span className="muted">TEHRAN · IR</span>
+					</div>
+				</div>
+			</section>
+		</main>
+	);
+}
+an className="brand-dot">.</span></span>
 				</div>
 				<div className="topbar-status">
 					<span className="status-dot" /> <span>CONTROL ROOM / 2026</span>
