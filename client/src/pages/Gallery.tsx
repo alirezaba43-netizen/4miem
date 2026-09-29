@@ -137,19 +137,15 @@ function VideoSlide({
 	index,
 	total,
 	isPlaying,
-	direction,
 	onNext,
-	onPrev,
-	slideVariants
+	onPrev
 }: {
 	project: typeof portfolioProjects[0];
 	index: number;
 	total: number;
 	isPlaying: boolean;
-	direction: number;
 	onNext: () => void;
 	onPrev: () => void;
-	slideVariants: any;
 }) {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const [isMuted, setIsMuted] = useState(true);
@@ -218,27 +214,22 @@ function VideoSlide({
 
 	const handleDragEnd = (_e: any, info: { offset: { x: number }; velocity: { x: number } }) => {
 		const threshold = 50;
-		if (info.offset.x > threshold || info.velocity.x > 250) {
+		if (info.offset.x > threshold || info.velocity.x > 200) {
 			onPrev();
-		} else if (info.offset.x < -threshold || info.velocity.x < -250) {
+		} else if (info.offset.x < -threshold || info.velocity.x < -200) {
 			onNext();
 		}
 	};
 
 	return (
 		<motion.div 
-			custom={direction}
-			variants={slideVariants}
-			initial="enter"
-			animate="center"
-			exit="exit"
-			transition={{
-				x: { type: "spring", stiffness: 350, damping: 30 },
-				opacity: { duration: 0.15 }
-			}}
+			initial={{ opacity: 0, scale: 0.95 }}
+			animate={{ opacity: 1, scale: 1 }}
+			exit={{ opacity: 0, scale: 0.95 }}
+			transition={{ duration: 0.15, ease: "easeOut" }}
 			drag="x"
 			dragConstraints={{ left: 0, right: 0 }}
-			dragElastic={0.5}
+			dragElastic={0.4}
 			onDragEnd={handleDragEnd}
 			style={{
 				width: "205px",
@@ -385,40 +376,20 @@ function VideoSlide({
 export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; onToggleLang: () => void; onOpenAi: () => void }) {
 	const t = copy[lang];
 	const [currentIndex, setCurrentIndex] = useState(0);
-	const [direction, setDirection] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
 
 	const handleNext = () => {
-		setDirection(1);
 		setIsPlaying(false);
 		setCurrentIndex((prev) => (prev === portfolioProjects.length - 1 ? 0 : prev + 1));
 	};
 
 	const handlePrev = () => {
-		setDirection(-1);
 		setIsPlaying(false);
 		setCurrentIndex((prev) => (prev === 0 ? portfolioProjects.length - 1 : prev - 1));
 	};
 
 	const handleTogglePlay = () => {
 		setIsPlaying((prev) => !prev);
-	};
-
-	const slideVariants = {
-		enter: (dir: number) => ({
-			x: dir > 0 ? 80 : -80,
-			opacity: 0
-		}),
-		center: {
-			zIndex: 1,
-			x: 0,
-			opacity: 1
-		},
-		exit: (dir: number) => ({
-			zIndex: 0,
-			x: dir < 0 ? 80 : -80,
-			opacity: 0
-		})
 	};
 
 	return (
@@ -447,7 +418,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 					<DeskScene onOpenAi={onOpenAi} />
 				</Canvas>
 
-				{/* قاب محافظ جمع‌وجور و تراز شده برای موبایل و دسکتاپ */}
 				<div 
 					style={{
 						position: "absolute",
@@ -467,7 +437,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						width: "240px",
 						height: "350px"
 					}}>
-						{/* دکمه قبلی نزدیک‌تر به قاب */}
 						<button 
 							type="button"
 							aria-label={t.prev}
@@ -495,22 +464,18 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							<ChevronLeft size={20} />
 						</button>
 
-						{/* مانیتور متحرک بدون لگ */}
-						<AnimatePresence initial={false} custom={direction} mode="popLayout">
+						<AnimatePresence mode="wait">
 							<VideoSlide
 								key={currentIndex}
 								project={portfolioProjects[currentIndex]}
 								index={currentIndex}
 								total={portfolioProjects.length}
 								isPlaying={isPlaying}
-								direction={direction}
 								onNext={handleNext}
 								onPrev={handlePrev}
-								slideVariants={slideVariants}
 							/>
 						</AnimatePresence>
 
-						{/* دکمه بعدی نزدیک‌تر به قاب */}
 						<button 
 							type="button"
 							aria-label={t.next}
@@ -585,5 +550,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-	}
-					
+					}
+							
