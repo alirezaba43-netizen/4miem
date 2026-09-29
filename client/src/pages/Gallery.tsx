@@ -4,7 +4,7 @@ import { useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Sparkles, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize, Heart } from "lucide-react";
-import { motion, animate } from "framer-motion";
+import { motion, useMotionValue } from "framer-motion";
 
 type Lang = "fa" | "en";
 
@@ -349,82 +349,63 @@ function SingleSlide({
 
 export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; onToggleLang: () => void; onOpenAi: () => void }) {
 	const t = copy[lang];
-	const [currentIndex, setCurrentIndex] = useState(0);
+	// مقداردهی اولیه ایندکس روی 1 قرار می‌گیرد چون آیتم صفرم در واقع کپیِ آخر است
+	const [displayIndex, setDisplayIndex] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
+	const [isTransitioning, setIsTransitioning] = useState(false);
 
 	const totalProjects = portfolioProjects.length;
 	const itemWidth = 225; // عرض کارت + گپ
 	
-	// ساخت آرایه چرخشی بی‌نهایت با تکرار مانیتور اول در آخر و مانیتور آخر در اول (برای لوپ ممتد)
+	// ساخت آرایه توسعه‌یافته: [آخرین آیتم، ...آیتم‌های اصلی، اولین آیتم]
 	const extendedProjects = useMemo(() => {
 		if (totalProjects === 0) return [];
 		return [
-			portfolioProjects[totalProjects - 1], // کپی از آخر برای سمت چپِ اولی
+			portfolioProjects[totalProjects - 1],
 			...portfolioProjects,
-			portfolioProjects[0]                 // کپی از اول برای سمت راستِ آخری
+			portfolioProjects[0]
 		];
 	}, [totalProjects]);
 
-	// موقعیت اولیه روی ایندکس ۱ تنظیم می‌شود چون مانیتور صفرم در واقع کپیِ آخر است
-	const x = useRef(-(currentIndex + 1) * itemWidth);
-	const trackRef = useRef<HTMLDivElement>(null);
+	const x = useMotionValue(-1 * itemWidth);
 
-	const animateToIndex = (targetIndex: number, immediate = false) => {
-		setIsPlaying(false);
-		const newPos = -(targetIndex + 1) * itemWidth;
-		
-		if (trackRef.current) {
-			if (immediate) {
-				x.current = newPos;
-				trackRef.current.style.transform = `translateX(${newPos}px)`;
-			} else {
-				animate(x.current, newPos, {
-					type: "spring",
-					stiffness: 320,
-					damping: 28,
-					onUpdate: (latest) => {
-						x.current = latest;
-						if (trackRef.current) {
-							trackRef.current.style.transform = `translateX(${latest}px)`;
-						}
-					}
-				});
-			}
-		}
-		setCurrentIndex(targetIndex);
-	};
+	// تعیین ایندکس واقعی برای نمایش به کاربر (بین 0 تا totalProjects - 1)
+	const realIndex = displayIndex === 0 
+		? totalProjects - 1 
+		: displayIndex === totalProjects + 1 
+		? 0 
+		: displayIndex - 1;
 
 	const handleNext = () => {
-		const nextIndex = (currentIndex + 1) % totalProjects;
-		if (currentIndex === totalProjects - 1) {
-			// اگر از آخرین ویدیو رد شدیم، اول به صورت نرم می‌رویم روی کپیِ اول، بعد بدون انیمیشن می‌پریم سر جای اصلی
-			animateToIndex(0);
-			setTimeout(() => {
-				if (trackRef.current) {
-					trackRef.current.style.transition = "none";
-					x.current = -1 * itemWidth;
-					trackRef.current.style.transform = `translateX(${-1 * itemWidth}px)`;
-				}
-			}, 300);
-		} else {
-			animateToIndex(nextIndex);
-		}
+		if (isTransitioning) return;
+		setIsPlaying(false);
+		setIsTransitioning(true);
+		const nextDisplayIndex = displayIndex + 1;
+		setDisplayIndex(nextDisplayIndex);
+		x.set(-nextDisplayIndex * itemWidth);
 	};
 
 	const handlePrev = () => {
-		const prevIndex = (currentIndex - 1 + totalProjects) % totalProjects;
-		if (currentIndex === 0) {
-			// اگر از اولین ویدیو رفتیم عقب، اول می‌رویم روی کپیِ آخر، بعد بدون انیمیشن برمی‌گردیم روی آخرین ویدیو اصلی
-			animateToIndex(totalProjects - 1);
-			setTimeout(() => {
-				if (trackRef.current) {
-					trackRef.current.style.transition = "none";
-					x.current = -totalProjects * itemWidth;
-					trackRef.current.style.transform = `translateX(${-totalProjects * itemWidth}px)`;
-				}
-			}, 300);
-		} else {
-			animateToIndex(prevIndex);
+		if (isTransitioning) return;
+		setIsPlaying(false);
+		setIsTransitioning(true);
+		const prevDisplayIndex = displayIndex - 1;
+		setDisplayIndex(prevDisplayIndex);
+		x.set(-prevDisplayIndex * itemWidth);
+	};
+
+	// بررسی و پرش پنهان (Seamless Jump) بعد از اتمام انیمیشن
+	const handleAnimationComplete = () => {
+		setIsTransitioning(false);
+		// اگر به کپیِ اول در انتهای لیست رسیدیم، بدون انیمیشن برمی‌گردیم روی اولین آیتم اصلی
+		if (displayIndex === totalProjects + 1) {
+			setDisplayIndex(1);
+			x.set(-1 * itemWidth);
+		} 
+		// اگر به کپیِ آخر در ابتدای لیست رسیدیم، بدون انیمیشن می‌پریم روی آخرین آیتم اصلی
+		else if (displayIndex === 0) {
+			setDisplayIndex(totalProjects);
+			x.set(-totalProjects * itemWidth);
 		}
 	};
 
@@ -439,7 +420,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 		} else if (info.offset.x > threshold || info.velocity.x > 250) {
 			handlePrev();
 		} else {
-			animateToIndex(currentIndex);
+			x.set(-displayIndex * itemWidth);
 		}
 	};
 
@@ -488,7 +469,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						width: "240px",
 						height: "350px"
 					}}>
-						{/* دکمه قبلی ثابت */}
+						{/* دکمه قبلی */}
 						<button 
 							type="button"
 							aria-label={t.prev}
@@ -516,7 +497,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							<ChevronLeft size={20} />
 						</button>
 
-						{/* کادر فرضی با قابلیت نمایش ممتد و لوپ بی‌نهایت */}
 						<div style={{
 							width: "205px",
 							height: "330px",
@@ -526,26 +506,27 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							alignItems: "center"
 						}}>
 							<motion.div
-								ref={trackRef}
 								drag="x"
 								dragConstraints={{
 									left: -(extendedProjects.length - 1) * itemWidth,
 									right: 0
 								}}
 								style={{
+									x,
 									display: "flex",
 									gap: "20px",
 									pointerEvents: "auto",
 									cursor: "grab",
-									touchAction: "pan-y",
-									x: -(currentIndex + 1) * itemWidth
+									touchAction: "pan-y"
 								}}
 								whileTap={{ cursor: "grabbing" }}
 								onDragEnd={handleDragEnd}
+								animate={{ x: -displayIndex * itemWidth }}
+								transition={{ type: "spring", stiffness: 300, damping: 28 }}
+								onAnimationComplete={handleAnimationComplete}
 							>
 								{extendedProjects.map((project, idx) => {
-									// محاسبه ایندکس اصلی برای نمایش صحیح شماره ویدیوها و لایک‌ها
-									const realIndex = idx === 0 
+									const calculatedRealIndex = idx === 0 
 										? totalProjects - 1 
 										: idx === extendedProjects.length - 1 
 										? 0 
@@ -555,16 +536,16 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 										<SingleSlide
 											key={`${project.id}-${idx}`}
 											project={project}
-											index={realIndex}
+											index={calculatedRealIndex}
 											total={totalProjects}
-											isPlaying={isPlaying && currentIndex === realIndex}
+											isPlaying={isPlaying && realIndex === calculatedRealIndex}
 										/>
 									);
 								})}
 							</motion.div>
 						</div>
 
-						{/* دکمه بعدی ثابت */}
+						{/* دکمه بعدی */}
 						<button 
 							type="button"
 							aria-label={t.next}
@@ -639,5 +620,5 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-}
-	
+				}
+		
