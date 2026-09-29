@@ -430,7 +430,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 					</AnimatePresence>
 				</div>
 
-				<div style={{ position: "absolute", bottom: "75px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
+				<div style={{ position: "absolute", bottom: "130px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
 					<button 
 						type="button"
 						lang={lang}
