@@ -577,5 +577,4 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-		}
-						
+}
