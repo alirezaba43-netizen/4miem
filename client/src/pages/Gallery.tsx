@@ -210,12 +210,12 @@ function SingleSlide({
 
 	return (
 		<div style={{
-			width: "205px",
-			height: "330px",
+			width: "min(320px, 75vw)",
+			height: "min(520px, 62vh)",
 			background: "#14181a",
-			borderRadius: "12px",
-			padding: "7px",
-			boxShadow: "0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(46, 196, 182, 0.2)",
+			borderRadius: "16px",
+			padding: "10px",
+			boxShadow: "0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(46, 196, 182, 0.25)",
 			border: "2px solid #22282a",
 			display: "flex",
 			flexDirection: "column",
@@ -227,7 +227,7 @@ function SingleSlide({
 				width: "100%",
 				height: "100%",
 				background: "#000",
-				borderRadius: "6px",
+				borderRadius: "10px",
 				overflow: "hidden",
 				position: "relative"
 			}}>
@@ -251,13 +251,13 @@ function SingleSlide({
 
 				<div style={{
 					position: "absolute",
-					top: "8px",
-					right: "8px",
-					background: "rgba(0,0,0,0.6)",
+					top: "12px",
+					right: "12px",
+					background: "rgba(0,0,0,0.65)",
 					color: "#2ec4b6",
-					padding: "2px 6px",
-					borderRadius: "4px",
-					fontSize: "9px",
+					padding: "4px 8px",
+					borderRadius: "6px",
+					fontSize: "11px",
 					fontWeight: "bold",
 					zIndex: 5
 				}}>
@@ -269,32 +269,32 @@ function SingleSlide({
 					onClick={handleLikeToggle}
 					style={{
 						position: "absolute",
-						top: "8px",
-						left: "8px",
-						background: "rgba(0,0,0,0.6)",
+						top: "12px",
+						left: "12px",
+						background: "rgba(0,0,0,0.65)",
 						border: `1px solid ${liked ? "#2ec4b6" : "rgba(46, 196, 182, 0.4)"}`,
 						color: "#2ec4b6",
-						borderRadius: "4px",
-						padding: "2px 5px",
+						borderRadius: "6px",
+						padding: "4px 8px",
 						cursor: "pointer",
 						display: "flex",
 						alignItems: "center",
-						gap: "3px",
-						fontSize: "9px",
+						gap: "5px",
+						fontSize: "11px",
 						fontWeight: "bold",
 						zIndex: 5,
 						transition: "all 0.2s ease"
 					}}
 				>
-					<Heart size={12} fill={liked ? "#2ec4b6" : "none"} />
+					<Heart size={14} fill={liked ? "#2ec4b6" : "none"} />
 					<span>{likeCount}</span>
 				</button>
 
 				<div style={{
 					position: "absolute",
-					bottom: "8px",
-					left: "8px",
-					right: "8px",
+					bottom: "12px",
+					left: "12px",
+					right: "12px",
 					display: "flex",
 					justifyContent: "space-between",
 					zIndex: 10
@@ -303,45 +303,45 @@ function SingleSlide({
 						type="button"
 						onClick={toggleMute}
 						style={{
-							background: "rgba(0,0,0,0.6)",
+							background: "rgba(0,0,0,0.65)",
 							border: "1px solid rgba(46, 196, 182, 0.4)",
 							color: "#2ec4b6",
-							borderRadius: "4px",
-							padding: "3px 5px",
+							borderRadius: "6px",
+							padding: "6px 8px",
 							cursor: "pointer",
 							display: "flex",
 							alignItems: "center"
 						}}
 					>
-						{isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+						{isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
 					</button>
 
 					<button
 						type="button"
 						onClick={requestFullscreen}
 						style={{
-							background: "rgba(0,0,0,0.6)",
+							background: "rgba(0,0,0,0.65)",
 							border: "1px solid rgba(46, 196, 182, 0.4)",
 							color: "#2ec4b6",
-							borderRadius: "4px",
-							padding: "3px 5px",
+							borderRadius: "6px",
+							padding: "6px 8px",
 							cursor: "pointer",
 							display: "flex",
 							alignItems: "center"
 						}}
 					>
-						<Maximize size={13} />
+						<Maximize size={16} />
 					</button>
 				</div>
 			</div>
 
 			<div style={{
-				width: "5px",
-				height: "5px",
+				width: "6px",
+				height: "6px",
 				borderRadius: "50%",
 				background: isPlaying ? "#ffd166" : "#2ec4b6",
-				boxShadow: `0 0 6px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
-				marginTop: "6px"
+				boxShadow: `0 0 8px ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
+				marginTop: "10px"
 			}} />
 		</div>
 	);
@@ -349,15 +349,25 @@ function SingleSlide({
 
 export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; onToggleLang: () => void; onOpenAi: () => void }) {
 	const t = copy[lang];
-	// مقداردهی اولیه ایندکس روی 1 قرار می‌گیرد چون آیتم صفرم در واقع کپیِ آخر است
 	const [displayIndex, setDisplayIndex] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [isTransitioning, setIsTransitioning] = useState(false);
+	const [itemWidth, setItemWidth] = useState(340);
 
 	const totalProjects = portfolioProjects.length;
-	const itemWidth = 225; // عرض کارت + گپ
 	
-	// ساخت آرایه توسعه‌یافته: [آخرین آیتم، ...آیتم‌های اصلی، اولین آیتم]
+	// محاسبه داینامیکِ عرض کارت بر اساس سایز صفحه (دسکتاپ یا موبایل)
+	useEffect(() => {
+		const updateWidth = () => {
+			const isDesktop = window.innerWidth >= 768;
+			const calculatedWidth = isDesktop ? Math.min(320, window.innerWidth * 0.75) + 24 : Math.min(320, window.innerWidth * 0.75) + 20;
+			setItemWidth(calculatedWidth);
+		};
+		updateWidth();
+		window.addEventListener("resize", updateWidth);
+		return () => window.removeEventListener("resize", updateWidth);
+	}, []);
+
 	const extendedProjects = useMemo(() => {
 		if (totalProjects === 0) return [];
 		return [
@@ -369,7 +379,10 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 
 	const x = useMotionValue(-1 * itemWidth);
 
-	// تعیین ایندکس واقعی برای نمایش به کاربر (بین 0 تا totalProjects - 1)
+	useEffect(() => {
+		x.set(-displayIndex * itemWidth);
+	}, [itemWidth, displayIndex, x]);
+
 	const realIndex = displayIndex === 0 
 		? totalProjects - 1 
 		: displayIndex === totalProjects + 1 
@@ -394,16 +407,12 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 		x.set(-prevDisplayIndex * itemWidth);
 	};
 
-	// بررسی و پرش پنهان (Seamless Jump) بعد از اتمام انیمیشن
 	const handleAnimationComplete = () => {
 		setIsTransitioning(false);
-		// اگر به کپیِ اول در انتهای لیست رسیدیم، بدون انیمیشن برمی‌گردیم روی اولین آیتم اصلی
 		if (displayIndex === totalProjects + 1) {
 			setDisplayIndex(1);
 			x.set(-1 * itemWidth);
-		} 
-		// اگر به کپیِ آخر در ابتدای لیست رسیدیم، بدون انیمیشن می‌پریم روی آخرین آیتم اصلی
-		else if (displayIndex === 0) {
+		} else if (displayIndex === 0) {
 			setDisplayIndex(totalProjects);
 			x.set(-totalProjects * itemWidth);
 		}
@@ -466,8 +475,8 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
-						width: "240px",
-						height: "350px"
+						width: "min(340px, 80vw)",
+						height: "min(550px, 68vh)"
 					}}>
 						{/* دکمه قبلی */}
 						<button 
@@ -476,32 +485,32 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							onClick={handlePrev}
 							style={{
 								position: "absolute",
-								left: "-42px",
+								left: "-50px",
 								top: "50%",
 								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
 								border: "1px solid #2ec4b6",
 								color: "#2ec4b6",
 								borderRadius: "50%",
-								width: "35px",
-								height: "35px",
+								width: "42px",
+								height: "42px",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
+								boxShadow: "0 6px 16px rgba(0,0,0,0.7)"
 							}}
 						>
-							<ChevronLeft size={20} />
+							<ChevronLeft size={24} />
 						</button>
 
 						<div style={{
-							width: "205px",
-							height: "330px",
+							width: "min(320px, 75vw)",
+							height: "min(520px, 62vh)",
 							overflow: "hidden",
-							borderRadius: "12px",
+							borderRadius: "16px",
 							display: "flex",
 							alignItems: "center"
 						}}>
@@ -552,30 +561,30 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							onClick={handleNext}
 							style={{
 								position: "absolute",
-								right: "-42px",
+								right: "-50px",
 								top: "50%",
 								transform: "translateY(-50%)",
 								background: "rgba(20, 24, 26, 0.95)",
 								border: "1px solid #2ec4b6",
 								color: "#2ec4b6",
 								borderRadius: "50%",
-								width: "35px",
-								height: "35px",
+								width: "42px",
+								height: "42px",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
 								cursor: "pointer",
 								zIndex: 30,
 								pointerEvents: "auto",
-								boxShadow: "0 4px 12px rgba(0,0,0,0.6)"
+								boxShadow: "0 6px 16px rgba(0,0,0,0.7)"
 							}}
 						>
-							<ChevronRight size={20} />
+							<ChevronRight size={24} />
 						</button>
 					</div>
 				</div>
 
-				<div style={{ position: "absolute", bottom: "130px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
+				<div style={{ position: "absolute", bottom: "110px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
 					<button 
 						type="button"
 						lang={lang}
@@ -584,27 +593,27 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 							background: isPlaying ? "rgba(255, 209, 102, 0.2)" : "rgba(46, 196, 182, 0.2)",
 							border: `1px solid ${isPlaying ? "#ffd166" : "#2ec4b6"}`,
 							color: "#fff",
-							padding: "10px 22px",
-							borderRadius: "25px",
+							padding: "12px 26px",
+							borderRadius: "30px",
 							cursor: "pointer",
 							display: "flex",
 							alignItems: "center",
-							gap: "8px",
+							gap: "10px",
 							backdropFilter: "blur(6px)",
-							fontSize: "13px",
+							fontSize: "14px",
 							fontWeight: "bold",
-							boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+							boxShadow: "0 6px 24px rgba(0,0,0,0.6)",
 							transition: "all 0.3s ease"
 						}}
 					>
-						{isPlaying ? <Pause size={16} /> : <Play size={16} />} 
+						{isPlaying ? <Pause size={18} /> : <Play size={18} />} 
 						{isPlaying ? t.pause : t.play}
 					</button>
 				</div>
 
 				<div className="world-overlay" style={{ pointerEvents: "none", zIndex: 10 }}>
 					<div className="world-rail left">
-						<span>02 / CONTROL ROOM</span>
+						<span>02 / CONTROLROOM</span>
 						<span className="muted">4MIEM / AI STUDIO</span>
 					</div>
 					<div className="world-copy" style={{ transform: "translate(-50%, -50px)", pointerEvents: "auto" }}>
@@ -620,5 +629,4 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 			</section>
 		</main>
 	);
-				}
-		
+						}
