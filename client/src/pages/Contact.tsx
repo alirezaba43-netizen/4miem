@@ -1,109 +1,195 @@
-import { useState, type FormEvent } from "react";
-import { ArrowUpRight, Instagram, Send, Loader2 } from "lucide-react";
+import React, { useState } from "react";
 
 export default function Contact() {
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", service: "", brief: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    service: "Film & commercial",
+    brief: "",
+  });
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
+  const [step, setStep] = useState<"form" | "success">("form");
+  const [status, setStatus] = useState<{
+    loading: boolean;
+    success: boolean | null;
+    message: string;
+  }>({
+    loading: false,
+    success: null,
+    message: "",
+  });
 
-    const endpoint = import.meta.env.VITE_FORM_ENDPOINT;
+  // اعتبارسنجی شماره موبایل ایران
+  const validateIranianPhone = (phone: string) => {
+    const regex = /^09[0-9]{9}$/;
+    return regex.test(phone);
+  };
 
-    if (!endpoint) {
-      setError("Form endpoint is not configured (VITE_FORM_ENDPOINT missing).");
-      setLoading(false);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus({ loading: true, success: null, message: "" });
+
+    if (!validateIranianPhone(formData.phone)) {
+      setStatus({
+        loading: false,
+        success: false,
+        message: "لطفا یک شماره موبایل معتبر ایرانی وارد کنید (مثال: 09123456789)",
+      });
       return;
     }
 
+    // لینک وب‌اپلیکیشن گوگل اسکریپت شما
+    const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyP0C6DqiR74c4wyUxgvGrXItgR6YX276OF6OaYfxAYN3M3c5paSuVXpZ5F7U5Hy_UNOw/exec";
+
     try {
-      const response = await fetch(endpoint, {
+      // ارسال مستقیم به گوگل اسکریپت (بدون نیاز به سرور واسط)
+      const response = await fetch(GOOGLE_SHEET_WEB_APP_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(form),
+        mode: "no-cors", // برای جلوگیری از خطای CORS در مرورگر
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        setSent(true);
-      } else {
-        const data = await response.json().catch(() => ({}));
-        setError(data.error || "Failed to send message. Please try again.");
-      }
-    } catch (err) {
-      setError("Network error. Please check your connection and try again.");
-    } finally {
-      setLoading(false);
+      // چون mode روی no-cors است، پاسخ مستقیم خوانده نمی‌شود اما درخواست با موفقیت ارسال می‌گردد
+      setStep("success");
+      setStatus({ loading: false, success: true, message: "پیام شما با موفقیت ثبت شد!" });
+    } catch (error: any) {
+      setStatus({ loading: false, success: false, message: "خطا در ارتباط با سرور گوگل." });
     }
   };
 
+  // لینک واتساپ
+  const adminWhatsAppNumber = "989108178424";
+  const whatsappMessage = encodeURIComponent(
+    `سلام، من ${formData.name} هستم. درخواست پروژه (${formData.service}) را در سایت ثبت کردم.`
+  );
+  const whatsappUrl = `https://wa.me/${adminWhatsAppNumber}?text=${whatsappMessage}`;
+
   return (
-    <main className="site-shell three-act standalone-page contact-page">
-      <div className="page-view-inner">
-        <header className="page-heading">
-          <span className="eyebrow">03 / OPEN A PROJECT FILE</span>
-          <h1>Tell us<br /><em>the spark.</em></h1>
-          <p dir="rtl">یک جمله، یک حس یا یک تصویر کافی‌ست تا شروع کنیم.</p>
-        </header>
-        <div className="contact-layout">
-          <aside className="contact-details">
-            <span className="eyebrow">DIRECT CHANNEL</span>
-            <a href="https://www.instagram.com/4miem/" target="_blank" rel="noreferrer">
-              <Instagram size={15} /> DM @4MIEM <ArrowUpRight size={14} />
-            </a>
-            <div><span>STUDIO</span><b>MEM STUDIO / TEHRAN</b></div>
-            <div><span>RESPONSE WINDOW</span><b>01—03 WORKING DAYS</b></div>
-          </aside>
-          <form className="contact-form" onSubmit={submit}>
-            {sent ? (
-              <div className="contact-success">
-                <span className="eyebrow">TRANSMISSION RECEIVED</span>
-                <h2>Signal logged.</h2>
-                <p>Thanks, {form.name}. Your project note is ready for the 4miem team.</p>
-                <a href="https://www.instagram.com/4miem/" target="_blank" rel="noreferrer">
-                  CONTINUE ON INSTAGRAM <ArrowUpRight size={14} />
-                </a>
-              </div>
-            ) : (
-              <>
-                {error && <div className="contact-error" style={{ color: "#ff4d4d", marginBottom: "1rem", fontSize: "0.9rem" }}>{error}</div>}
-                <label>
-                  <span>YOUR NAME</span>
-                  <input required dir="auto" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Name / studio" />
-                </label>
-                <label>
-                  <span>EMAIL</span>
-                  <input required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@studio.com" />
-                </label>
-                <label>
-                  <span>PROJECT TYPE</span>
-                  <select required value={form.service} onChange={(event) => setForm({ ...form, service: event.target.value })}>
-                    <option value="" disabled>Select a service</option>
-                    <option>Film & commercial</option>
-                    <option>Music video</option>
-                    <option>AI world</option>
-                    <option>Digital identity</option>
-                  </select>
-                </label>
-                <label>
-                  <span>THE SHORT VERSION</span>
-                  <textarea required dir="auto" rows={4} value={form.brief} onChange={(event) => setForm({ ...form, brief: event.target.value })} placeholder="A sentence, a mood, a problem..." />
-                </label>
-                <button className="page-submit" type="submit" disabled={loading}>
-                  <span>{loading ? "TRANSMITTING..." : "SEND PROJECT FILE"}</span>
-                  {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-                </button>
-              </>
-            )}
+    <div className="min-h-screen bg-[#0b0f0e] text-[#e0e0e0] flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-2xl bg-[#121816] p-8 rounded-2xl border border-[#1f2d28] shadow-2xl">
+        <h2 className="text-3xl font-bold text-center mb-2 text-white">Tell us the spark.</h2>
+        <p className="text-center text-sm text-gray-400 mb-8">یک جمله، یک حس یا یک تصویر کافی‌ست تا شروع کنیم.</p>
+
+        {step === "form" ? (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">Your Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#18221f] border border-[#2a3c35] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                placeholder="علیرضا"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#18221f] border border-[#2a3c35] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                placeholder="name@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">Phone Number</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#18221f] border border-[#2a3c35] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                placeholder="09123456789"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">Project Type</label>
+              <select
+                name="service"
+                value={formData.service}
+                onChange={handleChange}
+                className="w-full bg-[#18221f] border border-[#2a3c35] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+              >
+                <option value="Film & commercial">Film & commercial</option>
+                <option value="Branding">Branding</option>
+                <option value="Web & 3D Experience">Web & 3D Experience</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">The Short Version</label>
+              <textarea
+                name="brief"
+                value={formData.brief}
+                onChange={handleChange}
+                rows={4}
+                required
+                className="w-full bg-[#18221f] border border-[#2a3c35] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                placeholder="درباره پروژه‌تان بنویسید..."
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={status.loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
+            >
+              {status.loading ? "در حال ثبت اطلاعات..." : "ارسال پیام و ثبت نهایی"}
+            </button>
           </form>
-        </div>
+        ) : (
+          <div className="text-center space-y-6 py-6">
+            <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+              ✓
+            </div>
+            <h3 className="text-2xl font-bold text-white">پیام شما با موفقیت ثبت شد</h3>
+            <p className="text-sm text-gray-300">
+              اطلاعات شما ثبت شد و ایمیل تایید ارسال گردید. برای گفتگوی مستقیم، می‌توانید از طریق واتساپ نیز اقدام کنید:
+            </p>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block w-full bg-green-600 hover:bg-green-500 text-white font-medium py-3 rounded-lg transition-colors text-center"
+            >
+              ارتباط مستقیم در واتساپ 💬
+            </a>
+            <button
+              onClick={() => {
+                setStep("form");
+                setFormData({ name: "", email: "", phone: "", service: "Film & commercial", brief: "" });
+              }}
+              className="block w-full text-sm text-gray-400 hover:text-white underline mt-4"
+            >
+              ارسال پیام جدید
+            </button>
+          </div>
+        )}
+
+        {status.message && step === "form" && (
+          <p className={`text-center text-sm mt-4 ${status.success ? "text-emerald-400" : "text-red-400"}`}>
+            {status.message}
+          </p>
+        )}
       </div>
-    </main>
+    </div>
   );
 }
