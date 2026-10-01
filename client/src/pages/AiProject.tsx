@@ -2,9 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Cpu, Image, Play, Sparkles } from "lucide-react";
 
 const tools = [
-  { id: "image", name: "Image Foundry", type: "STILL / STYLE FRAME", model: "VISUAL SYSTEM 01", image: "/manus-storage/post-03_d6a7a67f.jpg" },
-  { id: "motion", name: "Motion Lab", type: "VIDEO / LOOP", model: "MOTION SYSTEM 02", image: "/manus-storage/post-01_51934b0b.jpg" },
-  { id: "portrait", name: "Portrait Signal", type: "PORTRAIT / PERFORMANCE", model: "PORTRAIT SYSTEM 03", image: "/manus-storage/post-05_e997ddae.jpg" },
+  { id: "image", name: "Image Foundry", type: "STILL / STYLE FRAME", model: "VISUAL SYSTEM 01", image: "/images/sample-1.jpg" },
+  { id: "motion", name: "Motion Lab", type: "VIDEO / LOOP", model: "MOTION SYSTEM 02", image: "/images/sample-2.jpg" },
+  { id: "portrait", name: "Portrait Signal", type: "PORTRAIT / PERFORMANCE", model: "PORTRAIT SYSTEM 03", image: "/images/sample-3.jpg" },
 ];
 
 export default function AiProject() {
@@ -31,10 +31,12 @@ export default function AiProject() {
           <form className="ai-prompt" onSubmit={preparePreview}>
             <label htmlFor="ai-prompt"><span>SCENE PROMPT</span><textarea id="ai-prompt" required rows={4} value={prompt} onChange={(event) => { setPrompt(event.target.value); setPreviewReady(false); }} placeholder="Describe a world, subject, light, or movement..." /></label>
             <button className="page-submit" type="submit"><span>PREPARE PREVIEW</span><Sparkles size={15} /></button>
-          </form>
+          </form><p style={{ fontSize: "12px", opacity: 0.7, marginTop: "10px", lineHeight: 1.5 }}>
+  Demo only. No image or video is generated yet. The frame shown is a sample from the studio.
+</p>
         </section>
         <section className="ai-preview" aria-live="polite">
-          <div className="ai-preview-image"><img src={tool.image} alt={`${tool.name} sample frame`} /><span className="ai-preview-shade" /><div className="ai-preview-status"><span className="status-dot" />{previewReady ? "PROMPT READY / SAMPLE OUTPUT" : "SAMPLE OUTPUT / 4MIEM"}</div>{previewReady && <span className="ai-preview-prompt">{prompt}</span>}</div>
+          <div className="ai-preview-image"><img src={tool.image} alt={`${tool.name} sample frame (demo)`} /><span className="ai-preview-shade" /><div className="ai-preview-status"><span className="status-dot" />{previewReady ? "DEMO / PROMPT SAVED, NO IMAGE GENERATED" : "DEMO / SAMPLE OUTPUT"}</div>{previewReady && <span className="ai-preview-prompt">{prompt}</span>}</div>
           <div className="ai-preview-meta"><span>{tool.name}</span><span>{tool.model}</span></div>
         </section>
       </div>
