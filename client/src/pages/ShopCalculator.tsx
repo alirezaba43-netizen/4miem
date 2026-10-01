@@ -2,9 +2,9 @@ import { useState } from "react";
 import { ArrowUpRight, Minus, Plus, ShoppingBag } from "lucide-react";
 
 const products = [
-  { id: "campaign", name: "AI Campaign Film", type: "BRAND / 00:30—01:00", price: 48000000, image: "/manus-storage/post-01_51934b0b.jpg" },
-  { id: "identity", name: "Visual Identity Kit", type: "IDENTITY / DIGITAL", price: 32000000, image: "/manus-storage/post-03_d6a7a67f.jpg" },
-  { id: "music", name: "Music Video World", type: "MUSIC / 00:20—00:45", price: 56000000, image: "/manus-storage/post-05_e997ddae.jpg" },
+  { id: "campaign", name: "AI Campaign Film", type: "BRAND / 00:30—01:00", price: 48000000, image: "/images/sample-1.jpg" },
+  { id: "identity", name: "Visual Identity Kit", type: "IDENTITY / DIGITAL", price: 32000000, image: "/images/sample-2.jpg" },
+  { id: "music", name: "Music Video World", type: "MUSIC / 00:20—00:45", price: 56000000, image: "/images/sample-3.jpg" },
 ];
 
 const currency = new Intl.NumberFormat("fa-IR");
