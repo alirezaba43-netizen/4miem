@@ -45,8 +45,8 @@ export default function App() {
         transitionStarted.current = false;
         transitionTarget.current = null;
         transitionTimer.current = null;
-      }, 720);
-    }, 1450);
+      }, 220);
+    }, 220);
   }, [currentView]);
 
   const activePage = currentView === "home"
