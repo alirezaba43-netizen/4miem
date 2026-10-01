@@ -300,12 +300,12 @@ function ReceptionScene({ burst, onActivate }: { burst: boolean; onActivate: () 
       onPointerOut={handlePointerOut}
     >
       <InfinityParticles burst={burst} hovered={hovered} />
-      <Text position={[0, -1.9, 0]} anchorX="center" fontSize={.08} color={hovered ? "#ffdf73" : "#4cf4e5"}>
+      <Text position={[0, -1.9, 0]} anchorX="center" fontSize={.08} color={hovered ? "#ffdf73" : "#4cf4e5"}  font="/fonts/SpaceGrotesk-Medium.ttf" >
         {burst ? "SIGNAL BREACH" : hovered ? "ENERGY CHARGED / TAP TO ENTER" : "MOVE CLOSER / TAP TO ENTER"}
       </Text>
     </group>
 
-    <Environment preset="night" />
+    <Environment files="/env/night.hdr" />
     <EffectComposer>
       <Bloom luminanceThreshold={.15} intensity={1.6} mipmapBlur radius={.7} />
       <Noise opacity={.02} />
