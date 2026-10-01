@@ -73,8 +73,8 @@ export default function Contact() {
   const whatsappUrl = `https://wa.me/${adminWhatsAppNumber}?text=${whatsappMessage}`;
 
   return (
-    <div className="min-h-screen bg-[#0b0f0e] text-[#e0e0e0] flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-2xl bg-[#121816] p-8 rounded-2xl border border-[#1f2d28] shadow-2xl relative">
+    <div className="absolute inset-0 overflow-y-auto bg-[#0b0f0e] text-[#e0e0e0] flex flex-col items-center p-6 pb-28">
+      <div className="w-full max-w-2xl my-auto bg-[#121816] p-8 rounded-2xl border border-[#1f2d28] shadow-2xl relative">
         
         {/* دکمه ضربدر (بستن) در بالای کارت */}
         <button
