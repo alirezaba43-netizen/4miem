@@ -2,16 +2,16 @@ import { useRef, useState, type FormEvent } from "react";
 import { Cpu, Image, Play, Sparkles, Loader2 } from "lucide-react";
 
 const tools = [
-  { id: "image", name: "Image Foundry", type: "STILL / STYLE FRAME", model: "QWEN3 14B (LOCAL)", image: "/images/sample-1.jpg" },
-  { id: "motion", name: "Motion Lab", type: "VIDEO / LOOP", model: "QWEN3 14B (LOCAL)", image: "/images/sample-2.jpg" },
-  { id: "portrait", name: "Portrait Signal", type: "PORTRAIT / PERFORMANCE", model: "QWEN3 14B (LOCAL)", image: "/images/sample-3.jpg" },
+  { id: "image", name: "Image Foundry", type: "STILL / STYLE FRAME", model: "QWEN / GROQ CLOUD", image: "/images/sample-1.jpg" },
+  { id: "motion", name: "Motion Lab", type: "VIDEO / LOOP", model: "QWEN / GROQ CLOUD", image: "/images/sample-2.jpg" },
+  { id: "portrait", name: "Portrait Signal", type: "PORTRAIT / PERFORMANCE", model: "QWEN / GROQ CLOUD", image: "/images/sample-3.jpg" },
 ];
 
 // درخواست‌ها به آدرس نسبی می‌روند و Vite (پروکسی) آن‌ها را به سرور لوکال می‌رساند.
-const LLM_BASE = "/v1";        // LM Studio  -> LM_STUDIO_URL
+const LLM_BASE = "/api/llm"; // Vercel serverless proxy keeps GROQ_API_KEY private
 const SD_BASE = "/sdapi/v1";   // Stable Diffusion WebUI / Forge -> SD_URL
-const FALLBACK_MODEL = "qwen3-14b";
-// منبع ساخت تصویر: "pollinations" (رایگان، آنلاین، بدون کلید) یا "local-sd" (Stable Diffusion لوکال)
+const FALLBACK_MODEL = "qwen/qwen3.8-27b";
+// منبع ساخت تصویر: "pollinations" (آنلاین، با کلید سمت سرور) یا "local-sd" (Stable Diffusion لوکال)
 const IMAGE_PROVIDER: "pollinations" | "local-sd" = "pollinations";
 const LLM_TIMEOUT_MS = 180_000;
 const SD_TIMEOUT_MS = 300_000;
@@ -43,14 +43,14 @@ export default function AiProject() {
 
   const resolveModel = async (signal: AbortSignal): Promise<string> => {
     if (modelRef.current) return modelRef.current;
-    if (!import.meta.env.DEV) return FALLBACK_MODEL; // در نسخه آنلاین، مدل را سرور انتخاب می‌کند
     try {
-      const res = await fetch(`${LLM_BASE}/models`, { signal });
+      const modelsUrl = `${LLM_BASE}?path=models`;
+      const res = await fetch(modelsUrl, { signal });
       if (res.ok) {
         const json = await res.json();
         const ids: string[] = (json.data ?? []).map((m: { id: string }) => m.id);
         const chosen =
-          ids.find((id) => id.toLowerCase().includes("qwen") && !id.toLowerCase().includes("embed")) ?? ids[0];
+          ids.find((id) => id.toLowerCase().includes("qwen")) ?? ids.find((id) => id.includes("llama-3.3-70b")) ?? FALLBACK_MODEL;
         if (chosen) {
           modelRef.current = chosen;
           return chosen;
@@ -63,20 +63,16 @@ export default function AiProject() {
   };
 
   // Pollinations از طریق سرور خودمان (/api/image) صدا زده می‌شود؛ کلید فقط سمت سرور است.
-  const generateWithPollinations = async (imgPrompt: string): Promise<string> => {
+  const generateWithPollinations = (imgPrompt: string): Promise<string> => {
     const seed = Math.floor(Math.random() * 1_000_000);
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 120_000);
-    try {
-      const res = await fetch(`/api/image?prompt=${encodeURIComponent(imgPrompt.slice(0, 600))}&seed=${seed}`, {
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error(`IMG_${res.status}`);
-      const blob = await res.blob();
-      return URL.createObjectURL(blob);
-    } finally {
-      clearTimeout(timer);
-    }
+    const url = `/api/image?prompt=${encodeURIComponent(imgPrompt.slice(0, 600))}&seed=${seed}`;
+    return new Promise((resolve, reject) => {
+      const probe = new window.Image();
+      const timer = setTimeout(() => reject(new Error("Pollinations timeout")), 120_000);
+      probe.onload = () => { clearTimeout(timer); resolve(url); };
+      probe.onerror = () => { clearTimeout(timer); reject(new Error("Pollinations failed")); };
+      probe.src = url;
+    });
   };
 
   const generateImage = async (sdPrompt: string): Promise<string> => {
@@ -118,7 +114,7 @@ export default function AiProject() {
     setImageUrl(null);
     setImageNote(null);
     setIsError(false);
-    setStage("QWEN IS THINKING...");
+    setStage("GROQ IS THINKING...");
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
@@ -133,7 +129,8 @@ CONCEPT: <a short creative description, max 100 words, in the same language as t
 IMAGE_PROMPT: <one single line, in English, for Stable Diffusion: subject, environment, style, lighting, camera, quality tags>`
         : `You are an AI assistant for a creative studio working on tool: ${tool.name} (${tool.type}). Provide a professional, creative concept description based on the user's prompt. Reply in the same language as the user.`;
 
-      const response = await fetch("/api/chat", {
+      const chatUrl = `${LLM_BASE}?path=chat/completions`;
+      const response = await fetch(chatUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
@@ -171,33 +168,16 @@ IMAGE_PROMPT: <one single line, in English, for Stable Diffusion: subject, envir
         setImageUrl(await generateImage(sdPrompt || prompt));
       } catch (imgErr) {
         console.error("Image generation error:", imgErr);
-        const code = imgErr instanceof Error ? imgErr.message : "";
-        setImageNote(
-          code === "IMG_402"
-            ? "اعتبار ساخت تصویر موقتاً تمام شده است. متن Qwen نمایش داده شد."
-            : code === "IMG_429"
-            ? "تعداد درخواست‌ها زیاد است؛ چند ثانیه صبر کنید و دوباره امتحان کنید."
-            : code === "IMG_401"
-            ? "کلید سرویس تصویر نامعتبر است (تنظیمات سرور)."
-            : "ساخت تصویر انجام نشد. فقط متن Qwen نمایش داده شد."
-        );
+        setImageNote("ساخت تصویر انجام نشد (کلید تنظیم نشده، موجودی تمام شده یا سرویس در دسترس نیست). فقط پاسخ متنی Groq نمایش داده شد.");
       }
     } catch (error) {
       console.error("Local AI Error:", error);
       setIsError(true);
       if (error instanceof DOMException && error.name === "AbortError") {
-        setAiResponse("خطا: زمان انتظار تمام شد. مدل در LM Studio بارگذاری شده است؟");
+        setAiResponse("خطا: زمان انتظار تمام شد. کلید و مدل Groq را در Vercel بررسی کنید.");
       } else {
-        const msg = error instanceof Error ? error.message : "";
-        setAiResponse(
-          /CREDIT/.test(msg)
-            ? "اعتبار سرویس هوش مصنوعی موقتاً تمام شده است. کمی بعد دوباره تلاش کنید."
-            : /HTTP 429/.test(msg)
-            ? "تعداد درخواست‌ها زیاد است؛ یک دقیقه صبر کنید و دوباره تلاش کنید."
-            : /HTTP (503|502|504)/.test(msg)
-            ? "سرویس هوش مصنوعی فعلاً در دسترس نیست. کمی بعد دوباره تلاش کنید."
-            : "خطا: ارتباط با LM Studio برقرار نشد. مطمئن شوید سرور در حال اجراست و مدل لود شده است."
-        );
+        const detail = error instanceof Error ? error.message.slice(0, 240) : "Unknown error";
+        setAiResponse(`خطا: ارتباط با Groq برقرار نشد.\n${detail}`);
       }
     } finally {
       clearTimeout(timer);
@@ -222,7 +202,7 @@ IMAGE_PROMPT: <one single line, in English, for Stable Diffusion: subject, envir
         <header className="page-heading ai-heading">
           <span className="eyebrow">05 / 4MIEM AI STUDIO</span>
           <h1>Make the<br /><em>impossible.</em></h1>
-          <p>Connected locally to Qwen3 14B via LM Studio.</p>
+          <p>Connected to Qwen via Groq Cloud.</p>
         </header>
 
         <div className="ai-layout">
@@ -248,7 +228,7 @@ IMAGE_PROMPT: <one single line, in English, for Stable Diffusion: subject, envir
 
             <form className="ai-prompt" onSubmit={handleGenerate}>
               <label htmlFor="ai-prompt">
-                <span>SCENE PROMPT (QWEN LOCAL)</span>
+                <span>SCENE PROMPT (GROQ CLOUD)</span>
                 <textarea
                   id="ai-prompt"
                   required
@@ -259,7 +239,7 @@ IMAGE_PROMPT: <one single line, in English, for Stable Diffusion: subject, envir
                 />
               </label>
               <button className="page-submit" type="submit" disabled={loading}>
-                <span>{loading ? "PROCESSING..." : "GENERATE WITH QWEN"}</span>
+                <span>{loading ? "PROCESSING..." : "GENERATE WITH GROQ"}</span>
                 {loading ? <Loader2 className="animate-spin" size={15} /> : <Sparkles size={15} />}
               </button>
             </form>
@@ -292,7 +272,7 @@ IMAGE_PROMPT: <one single line, in English, for Stable Diffusion: subject, envir
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, letterSpacing: "0.08em", color: white }}>
                   <span className="status-dot" style={{ background: statusColor }} />
-                  {loading ? stage : isError ? "CONNECTION ERROR" : "LOCAL QWEN RESPONSE"}
+                  {loading ? stage : isError ? "CONNECTION ERROR" : "GROQ RESPONSE"}
                   <button
                     type="button"
                     onClick={resetAll}
