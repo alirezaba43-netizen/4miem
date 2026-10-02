@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
-import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
@@ -203,6 +203,23 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
+// Address of LM Studio's local server. Override with: LM_STUDIO_URL=http://IP:1234 pnpm dev
+const LM_STUDIO_URL = process.env.LM_STUDIO_URL || "http://192.168.10.2:1234";
+
+// Pollinations secret key (sk_...) lives ONLY on the server side (never VITE_ prefixed).
+// Put it in .env as: POLLINATIONS_KEY=sk_xxxxxxxx
+const POLLI_KEY =
+  process.env.POLLINATIONS_KEY || loadEnv("development", import.meta.dirname, "").POLLINATIONS_KEY || "";
+
+console.log(
+  POLLI_KEY
+    ? `[pollinations] key loaded: ${POLLI_KEY.slice(0, 3)}...${POLLI_KEY.slice(-3)} (${POLLI_KEY.length} chars)`
+    : "[pollinations] WARNING: POLLINATIONS_KEY not found in .env (project root) -> image requests will fail with 401"
+);
+
+// Address of the image generator (Stable Diffusion WebUI / Forge, started with --api)
+const SD_URL = process.env.SD_URL || "http://127.0.0.1:7860";
+
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
 
 export default defineConfig({
@@ -236,6 +253,55 @@ export default defineConfig({
     fs: {
       strict: true,
       deny: ["**/.*"],
+    },
+    proxy: {
+      // LM Studio (Qwen) proxy:
+      // The browser calls /v1/... on the same origin (localhost:3000) and Vite
+      // forwards it to LM Studio server-side, so CORS no longer applies.
+      "/v1": {
+        target: LM_STUDIO_URL,
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        timeout: 0, // LLM responses can be slow; don't cut the connection
+        proxyTimeout: 0,
+      },
+      // Same endpoint as production (/api/chat) -> local LM Studio, so dev and prod behave alike
+      "/api/chat": {
+        target: LM_STUDIO_URL,
+        changeOrigin: true,
+        secure: false,
+        timeout: 0,
+        proxyTimeout: 0,
+        rewrite: () => "/v1/chat/completions",
+      },
+      // Pollinations image proxy: /api/image?prompt=... -> gen.pollinations.ai/image/...
+      // The secret key is added here, so it never reaches the browser.
+      "/api/image": {
+        target: "https://gen.pollinations.ai",
+        changeOrigin: true,
+        secure: true,
+        headers: { Authorization: `Bearer ${POLLI_KEY}` },
+        configure: (proxy) => {
+          proxy.on("proxyRes", (proxyRes) => {
+            console.log(`[pollinations] upstream responded ${proxyRes.statusCode}`);
+          });
+        },
+        rewrite: (reqPath) => {
+          const u = new URL(reqPath, "http://localhost");
+          const prompt = (u.searchParams.get("prompt") || "").slice(0, 600);
+          const seed = Number(u.searchParams.get("seed")) || 0;
+          return `/image/${encodeURIComponent(prompt)}?model=flux&width=1024&height=1024&seed=${seed}`;
+        },
+      },
+      // Image generation proxy (Stable Diffusion WebUI API)
+      "/sdapi": {
+        target: SD_URL,
+        changeOrigin: true,
+        secure: false,
+        timeout: 0,
+        proxyTimeout: 0,
+      },
     },
   },
 });
