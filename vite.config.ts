@@ -203,13 +203,15 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-// Address of LM Studio's local server. Override with: LM_STUDIO_URL=http://IP:1234 pnpm dev
+// Legacy local LM Studio address, retained for the optional Stable Diffusion/old setup.
 const LM_STUDIO_URL = process.env.LM_STUDIO_URL || "http://192.168.10.2:1234";
 
 // Pollinations secret key (sk_...) lives ONLY on the server side (never VITE_ prefixed).
 // Put it in .env as: POLLINATIONS_KEY=sk_xxxxxxxx
 const POLLI_KEY =
   process.env.POLLINATIONS_KEY || loadEnv("development", import.meta.dirname, "").POLLINATIONS_KEY || "";
+const GROQ_KEY =
+  process.env.GROQ_API_KEY || loadEnv("development", import.meta.dirname, "").GROQ_API_KEY || "";
 
 console.log(
   POLLI_KEY
@@ -255,6 +257,23 @@ export default defineConfig({
       deny: ["**/.*"],
     },
     proxy: {
+      // Local Groq proxy: /api/llm?path=... -> api.groq.com/openai/v1/...
+      // The API key stays in the Vite server and is never exposed to the browser.
+      // Groq is reached through the local Python requests proxy because direct
+      // curl/Node requests are rejected by the current network edge with 403.
+      "/api/llm": {
+        target: "http://127.0.0.1:8001",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (reqPath) => {
+          const u = new URL(reqPath, "http://localhost");
+          const requestedPath =
+            u.searchParams.get("path") === "models"
+              ? "models"
+              : "chat/completions";
+          return `/${requestedPath}`;
+        },
+      },
       // LM Studio (Qwen) proxy:
       // The browser calls /v1/... on the same origin (localhost:3000) and Vite
       // forwards it to LM Studio server-side, so CORS no longer applies.
@@ -265,15 +284,6 @@ export default defineConfig({
         ws: true,
         timeout: 0, // LLM responses can be slow; don't cut the connection
         proxyTimeout: 0,
-      },
-      // Same endpoint as production (/api/chat) -> local LM Studio, so dev and prod behave alike
-      "/api/chat": {
-        target: LM_STUDIO_URL,
-        changeOrigin: true,
-        secure: false,
-        timeout: 0,
-        proxyTimeout: 0,
-        rewrite: () => "/v1/chat/completions",
       },
       // Pollinations image proxy: /api/image?prompt=... -> gen.pollinations.ai/image/...
       // The secret key is added here, so it never reaches the browser.
