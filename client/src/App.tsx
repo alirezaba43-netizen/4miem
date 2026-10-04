@@ -9,6 +9,7 @@ import { LangProvider, useLang } from "./lib/i18n";
 import { setSoundEnabled, useSoundEnabled } from "./lib/sound";
 import { useSeo } from "./lib/seo";
 import { projectFromPath } from "./lib/projects";
+import "./nav-mobile.css";
 
 // Every page is its own chunk: the heavy 3D code only downloads when its page opens.
 const Home = lazy(() => import("./pages/Home"));
