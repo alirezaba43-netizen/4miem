@@ -4,8 +4,15 @@ import { Environment, Text } from "@react-three/drei";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { ArrowDownRight, Sparkles, Volume2 } from "lucide-react";
+import { useLang } from "../lib/i18n";
+import { playSfx, soundEnabled } from "../lib/sound";
+
+const BOOT_FLAG = "4miem-booted";
+const bootedBefore = () => { try { return window.sessionStorage.getItem(BOOT_FLAG) === "1"; } catch { return false; } };
+const markBooted = () => { try { window.sessionStorage.setItem(BOOT_FLAG, "1"); } catch { /* ignore */ } };
 
 function Boot({ onEnter }: { onEnter: () => void }) {
+  const { t } = useLang();
   const [started, setStarted] = useState(false);
   const [typed, setTyped] = useState("");
   const [exiting, setExiting] = useState(false);
@@ -19,12 +26,7 @@ function Boot({ onEnter }: { onEnter: () => void }) {
     audioRef.current.volume = 0.8;
   }, []);
 
-  const playKeySound = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    }
-  };
+  const playKeySound = () => playSfx(audioRef.current);
 
   const enterOnce = useCallback(() => {
     if (entered.current) return;
@@ -35,7 +37,7 @@ function Boot({ onEnter }: { onEnter: () => void }) {
   }, [onEnter]);
 
   const handleStartAudioAndTyping = () => {
-    if (audioRef.current) {
+    if (audioRef.current && soundEnabled()) {
       audioRef.current.play().then(() => {
         audioRef.current?.pause();
         audioRef.current!.currentTime = 0;
@@ -82,7 +84,7 @@ function Boot({ onEnter }: { onEnter: () => void }) {
     {!started ? (
       <div className="boot-copy" style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "20px" }}>
         <div className="boot-meta"><span>MEMORY / 001</span><span>SECURE CHANNEL</span></div>
-        <div className="boot-sub" style={{ fontSize: "1.2rem", color: "#4cf4e5" }}>برای ورود به اتاق فرمان و فعال‌سازی سیستم صوتی کلیک کنید</div>
+        <div className="boot-sub" dir="auto" style={{ fontSize: "1.2rem", color: "#4cf4e5" }}>{t.home.bootPrompt}</div>
         <button 
           onClick={handleStartAudioAndTyping}
           style={{
@@ -101,18 +103,18 @@ function Boot({ onEnter }: { onEnter: () => void }) {
             transition: "all 0.3s ease"
           }}
         >
-          <Volume2 size={18} /> اتصال و شروع سیستم
+          <Volume2 size={18} /> {t.home.bootStart}
         </button>
       </div>
     ) : (
       <div className="boot-copy">
         <div className="boot-meta"><span>MEMORY / 001</span><span>SECURE CHANNEL</span></div>
         <div className="boot-line"><span>{typed}</span><span className="terminal-cursor" /></div>
-        <div className="boot-sub">An independent image-making studio for ideas that refuse to stay still.</div>
+        <div className="boot-sub" dir="auto">{t.home.bootSub}</div>
       </div>
     )}
 
-    {started && <button className="skip-boot" onClick={skip}>ENTER STUDIO <ArrowDownRight size={15} /></button>}
+    {started && <button className="skip-boot" onClick={skip}>{t.home.bootSkip} <ArrowDownRight size={15} /></button>}
   </div>;
 }
 
@@ -256,10 +258,7 @@ function ReceptionScene({ burst, onActivate }: { burst: boolean; onActivate: () 
   const handlePointerOver = () => {
     setHovered(true);
     document.body.style.cursor = "pointer";
-    if (hoverAudioRef.current && !burst) {
-      hoverAudioRef.current.currentTime = 0;
-      hoverAudioRef.current.play().catch(() => {});
-    }
+    if (!burst) playSfx(hoverAudioRef.current);
   };
 
   const handlePointerOut = () => {
@@ -272,10 +271,7 @@ function ReceptionScene({ burst, onActivate }: { burst: boolean; onActivate: () 
     event.stopPropagation();
     if (burst) return;
     
-    if (explosionAudioRef.current) {
-      explosionAudioRef.current.currentTime = 0;
-      explosionAudioRef.current.play().catch(() => {});
-    }
+    playSfx(explosionAudioRef.current);
     onActivate();
   };
   
@@ -315,12 +311,14 @@ function ReceptionScene({ burst, onActivate }: { burst: boolean; onActivate: () 
 }
 
 export default function Home({ onOpenGallery }: { onOpenGallery: () => void }) {
-  const [act, setAct] = useState<"boot" | "reception">("boot");
+  const { lang, t } = useLang();
+  // The typing intro plays once per visit; coming back to Home goes straight to the reception.
+  const [act, setAct] = useState<"boot" | "reception">(() => (bootedBefore() ? "reception" : "boot"));
   const [burst, setBurst] = useState(false);
   const [fadeScreen, setFadeScreen] = useState(false);
   const activated = useRef(false);
   
-  const enterReception = useCallback(() => setAct("reception"), []);
+  const enterReception = useCallback(() => { markBooted(); setAct("reception"); }, []);
   
   const activateInfinity = useCallback(() => {
     if (activated.current) return;
@@ -344,7 +342,7 @@ export default function Home({ onOpenGallery }: { onOpenGallery: () => void }) {
         <CameraRig />
         {act === "reception" && <ReceptionScene burst={burst} onActivate={activateInfinity} />}
       </Canvas>
-      <div className="world-overlay"><div className="world-rail left"><span>01 / RECEPTION BOOTH</span><span className="muted">4MIEM / MEM STUDIO</span></div><div className="world-copy"><span className="hero-kicker"><Sparkles size={12} /> INDEPENDENT IMAGE-MAKING STUDIO</span><h1>Give the<br /><em>idea</em> a body.</h1><p>برای ورود، تندیس بی‌نهایت را لمس کن.</p></div><div className="world-rail right"><span>IDEAS IN / IMAGES OUT</span><span className="muted">TEHRAN · IR</span></div><div className="world-footer"><span className="scroll-line" /> <span>DRAG / TOUCH TO EXPLORE</span></div></div>
+      <div className="world-overlay"><div className="world-rail left"><span>01 / RECEPTION BOOTH</span><span className="muted">4MIEM / MEM STUDIO</span></div><div className="world-copy"><span className="hero-kicker"><Sparkles size={12} /> {t.home.kicker}</span><h1>{lang === "fa" ? <>به ایده<br /><em>جان</em> بده.</> : <>Give the<br /><em>idea</em> a body.</>}</h1><p dir="auto">{t.home.hint}</p>{act === "reception" && <button type="button" className="enter-gallery" onClick={activateInfinity}>{t.home.enter} <ArrowDownRight size={14} /></button>}</div><div className="world-rail right"><span>IDEAS IN / IMAGES OUT</span><span className="muted">TEHRAN · IR</span></div><div className="world-footer"><span className="scroll-line" /> <span>{t.home.footer}</span></div></div>
     </section>
   </main>;
 }

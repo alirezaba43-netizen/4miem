@@ -3,10 +3,17 @@ import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocess
 import { useTexture } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Sparkles, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize, Heart } from "lucide-react";
+import { Sparkles, Play, Pause, ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize, Heart, ArrowUpRight } from "lucide-react";
 import { motion, useMotionValue } from "framer-motion";
+import { portfolioProjects } from "../lib/projects";
+import "./gallery-layout.css";
 
 type Lang = "fa" | "en";
+
+const ls = {
+	get(key: string): string | null { try { return window.localStorage.getItem(key); } catch { return null; } },
+	set(key: string, value: string) { try { window.localStorage.setItem(key, value); } catch { /* storage blocked */ } },
+};
 
 const copy = {
 	fa: {
@@ -16,6 +23,7 @@ const copy = {
 		prev: "ویدیوی قبلی",
 		next: "ویدیوی بعدی",
 		switchLang: "Switch to English",
+		open: "مشاهده پروژه",
 	},
 	en: {
 		hint: "Press the button below to play or pause the video, and use the arrows or swipe to change the screen.",
@@ -24,14 +32,11 @@ const copy = {
 		prev: "Previous video",
 		next: "Next video",
 		switchLang: "تغییر به فارسی",
+		open: "View project",
 	},
 } as const;
 
-const portfolioProjects = [
-  { id: 1, title: "Project One", videoUrl: "/portfolio.mp4", posterUrl: "/portfolio-poster-1.jpg" },
-  { id: 2, title: "Project Two", videoUrl: "/portfolio-2.mp4", posterUrl: "/portfolio-poster-2.jpg" },
-  { id: 3, title: "Project Three", videoUrl: "/portfolio-3.mp4", posterUrl: "/portfolio-poster-3.jpg" },
-];
+// The projects now live in ../lib/projects.ts (titles, videos and the text of each project page).
 
 function GalleryCamera() {
 	const { camera, pointer } = useThree();
@@ -134,11 +139,13 @@ function DeskScene({ onOpenAi }: { onOpenAi: () => void }) {
 
 function SingleSlide({
 	project,
+	lang,
 	index,
 	total,
 	isPlaying
 }: {
 	project: typeof portfolioProjects[0];
+	lang: Lang;
 	index: number;
 	total: number;
 	isPlaying: boolean;
@@ -150,8 +157,8 @@ function SingleSlide({
 	const [likeCount, setLikeCount] = useState<number>(0);
 
 	useEffect(() => {
-		const savedLikeState = localStorage.getItem(`video_liked_${index}`);
-		const savedLikeCount = localStorage.getItem(`video_count_${index}`);
+		const savedLikeState = ls.get(`video_liked_${index}`);
+		const savedLikeCount = ls.get(`video_count_${index}`);
 		
 		if (savedLikeState !== null) {
 			setLiked(JSON.parse(savedLikeState));
@@ -204,8 +211,8 @@ function SingleSlide({
 		setLiked(newLikedState);
 		setLikeCount(newCount);
 
-		localStorage.setItem(`video_liked_${index}`, JSON.stringify(newLikedState));
-		localStorage.setItem(`video_count_${index}`, newCount.toString());
+		ls.set(`video_liked_${index}`, JSON.stringify(newLikedState));
+		ls.set(`video_count_${index}`, newCount.toString());
 	};
 
 	return (
@@ -233,13 +240,14 @@ function SingleSlide({
 			}}>
 				<video
 					ref={videoRef}
-					aria-label={project.title}
+					aria-label={project.title[lang]}
 					src={project.videoUrl}
 					poster={project.posterUrl}
 					playsInline
 					loop
 					muted
 					preload="none"
+					onError={(e) => { e.currentTarget.removeAttribute("src"); e.currentTarget.load(); }}
 					style={{
 						width: "100%",
 						height: "100%",
@@ -347,7 +355,7 @@ function SingleSlide({
 	);
 }
 
-export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; onToggleLang: () => void; onOpenAi: () => void }) {
+export default function Gallery({ lang, onOpenAi, onOpenProject }: { lang: Lang; onToggleLang?: () => void; onOpenAi: () => void; onOpenProject: (slug: string) => void }) {
 	const t = copy[lang];
 	const [displayIndex, setDisplayIndex] = useState(1);
 	const [isPlaying, setIsPlaying] = useState(false);
@@ -443,7 +451,6 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 				<div className="topbar-status">
 					<span className="status-dot" /> <span>CONTROL ROOM / 2026</span>
 				</div>
-				<button type="button" className="gallery-language" aria-label={t.switchLang} onClick={onToggleLang}>{lang === "fa" ? "EN" : "FA"}</button>
 			</header>
 			
 			<section className="world-section gallery-act" style={{ position: "relative", width: "100%", height: "100dvh", overflow: "hidden" }}>
@@ -545,6 +552,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 										<SingleSlide
 											key={`${project.id}-${idx}`}
 											project={project}
+											lang={lang}
 											index={calculatedRealIndex}
 											total={totalProjects}
 											isPlaying={isPlaying && realIndex === calculatedRealIndex}
@@ -584,7 +592,7 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 					</div>
 				</div>
 
-				<div style={{ position: "absolute", bottom: "110px", left: "50%", transform: "translateX(-50%)", zIndex: 25 }}>
+				<div style={{ position: "absolute", bottom: "110px", left: "50%", transform: "translateX(-50%)", zIndex: 25, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", width: "max-content", maxWidth: "92vw" }}>
 					<button 
 						type="button"
 						lang={lang}
@@ -609,6 +617,29 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						{isPlaying ? <Pause size={18} /> : <Play size={18} />} 
 						{isPlaying ? t.pause : t.play}
 					</button>
+					<button
+						type="button"
+						lang={lang}
+						aria-label={`${t.open}: ${portfolioProjects[realIndex].title[lang]}`}
+						onClick={() => onOpenProject(portfolioProjects[realIndex].slug)}
+						style={{
+							background: "rgba(4, 12, 13, 0.55)",
+							border: "1px solid rgba(255, 255, 255, 0.35)",
+							color: "#fff",
+							padding: "12px 22px",
+							borderRadius: "30px",
+							cursor: "pointer",
+							display: "flex",
+							alignItems: "center",
+							gap: "8px",
+							backdropFilter: "blur(6px)",
+							fontSize: "14px",
+							fontWeight: "bold",
+							boxShadow: "0 6px 24px rgba(0,0,0,0.6)"
+						}}
+					>
+						{t.open} <ArrowUpRight size={16} aria-hidden="true" />
+					</button>
 				</div>
 
 				<div className="world-overlay" style={{ pointerEvents: "none", zIndex: 10 }}>
@@ -616,9 +647,9 @@ export default function Gallery({ lang, onToggleLang, onOpenAi }: { lang: Lang; 
 						<span>02 / CONTROLROOM</span>
 						<span className="muted">4MIEM / AI STUDIO</span>
 					</div>
-					<div className="world-copy" style={{ transform: "translate(-50%, -50px)", pointerEvents: "auto" }}>
+					<div className="world-copy" style={{ transform: "translateX(-50%)", pointerEvents: "auto" }}>
 						<span className="hero-kicker"><Sparkles size={12} /> ADVANCED WORKSPACE</span>
-						<h1>A desk for<br /><em>new worlds.</em></h1>
+						<h1>A desk for{" "}<br /><em>new worlds.</em></h1>
 						<p lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>{t.hint}</p>
 					</div>
 					<div className="world-rail right">

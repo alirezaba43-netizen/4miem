@@ -1,0 +1,47 @@
+/* ===== About page (/about) ===== */
+.about-page .page-view-inner { padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px)); }
+.ab { max-width: 980px; margin: 0 auto; }
+
+.ab-intro { max-width: 860px; margin: 28px 0 0; color: #e9faf5; font: 600 clamp(28px, 5vw, 54px)/1.08 "Space Grotesk", "Vazirmatn", sans-serif; letter-spacing: -.02em; text-wrap: balance; }
+html[lang="fa"] .ab-intro { font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+
+.ab-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 56px; margin-top: 72px; align-items: start; }
+
+.ab-title { margin: 0 0 18px; color: var(--muted-foreground); font: 500 13px "Space Grotesk", "Vazirmatn", sans-serif; }
+
+.ab-list { margin: 0; padding: 0; list-style: none; }
+.ab-list li { padding: 18px 0; border-top: 1px solid var(--line); }
+.ab-list h3 { margin: 0 0 6px; color: #e9faf5; font: 500 19px/1.4 "Space Grotesk", "Vazirmatn", sans-serif; }
+.ab-list p { max-width: 520px; margin: 0; color: rgba(200, 232, 225, .72); font-size: 14px; line-height: 1.9; }
+.ab-more { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--line); width: 100%; color: var(--cyan); font: 12px "DM Mono", "Vazirmatn", monospace; }
+.ab-more:hover { color: #fff; }
+[dir="rtl"] .ab-more svg { transform: scaleX(-1); }
+
+.ab-facts { margin: 0; }
+.ab-facts > div { padding: 14px 0; border-top: 1px solid var(--line); }
+.ab-facts dt { color: var(--muted-foreground); font-size: 12px; }
+.ab-facts dd { margin: 4px 0 0; color: #e7f5f3; font-size: 16px; line-height: 1.6; }
+
+.ab-story { max-width: 640px; margin-top: 72px; }
+.ab-story .ab-title { color: #e9faf5; font: 600 clamp(24px, 3.6vw, 36px)/1.15 "Space Grotesk", "Vazirmatn", sans-serif; }
+html[lang="fa"] .ab-story .ab-title { font-weight: 700; line-height: 1.45; }
+.ab-story p { margin: 0; color: rgba(200, 232, 225, .78); font-size: 15px; line-height: 1.95; }
+
+.ab-timeline { margin-top: 72px; }
+.ab-timeline ol { margin: 0; padding: 0; list-style: none; }
+.ab-timeline li { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
+.ab-year { color: var(--cyan); font: 12px "DM Mono", "Vazirmatn", monospace; padding-top: 4px; }
+.ab-timeline h3 { margin: 0; color: #e9faf5; font-size: 17px; font-weight: 500; }
+.ab-timeline small { display: block; margin-top: 2px; color: var(--muted-foreground); font-size: 12px; }
+.ab-timeline p { max-width: 560px; margin: 8px 0 0; color: rgba(200, 232, 225, .72); font-size: 14px; line-height: 1.9; }
+
+.ab-cta { margin-top: 80px; padding-top: 28px; border-top: 1px solid var(--line); }
+.ab-cta h2 { margin: 0 0 8px; color: #e9faf5; font: 600 clamp(26px, 4vw, 40px)/1.15 "Space Grotesk", "Vazirmatn", sans-serif; }
+html[lang="fa"] .ab-cta h2 { font-weight: 700; line-height: 1.45; }
+.ab-cta p { margin: 0 0 22px; color: rgba(200, 232, 225, .74); font-size: 14px; }
+
+@media (max-width: 760px) {
+  .ab-body { grid-template-columns: minmax(0, 1fr); gap: 40px; margin-top: 48px; }
+  .ab-story, .ab-timeline { margin-top: 52px; }
+  .ab-cta { margin-top: 56px; }
+}

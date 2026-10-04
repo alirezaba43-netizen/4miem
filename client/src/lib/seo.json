@@ -1,0 +1,94 @@
+{
+  "name": "4miem",
+  "url": "https://4miem.vercel.app",
+  "tagline": "Give the idea a body.",
+  "locale": { "fa": "fa_IR", "en": "en_US" },
+  "description": {
+    "fa": "4miem؛ استودیوی مستقل ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی در تهران. هویت بصری و تجربه‌های وب و سه‌بعدی برای برندها.",
+    "en": "4miem is an independent AI film, teaser and image studio in Tehran. Commercials, visual identity and interactive web & 3D experiences for brands."
+  },
+  "routes": {
+    "/": {
+      "fa": { "title": "4miem | استودیوی ساخت تیزر و فیلم با هوش مصنوعی", "description": "4miem؛ استودیوی مستقل ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی در تهران. ایده‌ات را به تصویر و ویدیو تبدیل کن.", "h1": "به ایده جان بده." },
+      "en": { "title": "4miem — AI Film, Teaser & Image Studio in Tehran", "description": "4miem is an independent AI film, teaser and image studio in Tehran. Give the idea a body: commercials, branding and web & 3D experiences.", "h1": "Give the idea a body." }
+    },
+    "/gallery": {
+      "fa": { "title": "گالری نمونه‌کار: تیزر و ویدیوهای هوش مصنوعی | 4miem", "description": "گالری سینمایی 4miem؛ نمونه تیزرها، رندرها و ویدیوهای ساخته‌شده با هوش مصنوعی.", "h1": "میزکاری برای جهان‌های تازه" },
+      "en": { "title": "Gallery — AI Teasers & Videos | 4miem", "description": "The 4miem cinematic gallery: sample teasers, renders and videos made with AI.", "h1": "A desk for new worlds" }
+    },
+    "/services": {
+      "fa": { "title": "خدمات: ساخت تیزر، فیلم تبلیغاتی، هویت بصری و سایت با هوش مصنوعی | 4miem", "description": "خدمات استودیوی 4miem: تیزر و فیلم تبلیغاتی با هوش مصنوعی، موزیک‌ویدیو، هویت بصری، سایت و تجربه‌های سه‌بعدی. روش کار و پرسش‌های متداول.", "h1": "خدمات استودیو" },
+      "en": { "title": "Services — AI Teasers, Commercials, Branding & Websites | 4miem", "description": "4miem services: AI teasers and commercial films, music videos, visual identity, websites and 3D experiences. How we work and common questions.", "h1": "Studio services" }
+    },
+    "/shop": {
+      "fa": { "title": "بسته‌های تولید و برآورد سریع قیمت | 4miem", "description": "بسته‌های تولید 4miem: فیلم کمپین با هوش مصنوعی، پکیج هویت بصری و موزیک‌ویدیو. برآورد سریع هزینه و شروع گفتگو.", "h1": "یک قالب انتخاب کن" },
+      "en": { "title": "Production Packages & Quick Estimate | 4miem", "description": "4miem production packages: AI campaign film, visual identity kit and music video world. Get a quick estimate and start a conversation.", "h1": "Choose a format" }
+    },
+    "/ai-studio": {
+      "fa": { "title": "استودیوی هوش مصنوعی: ساخت کانسپت و تصویر آنلاین | 4miem", "description": "AI Studio سایت 4miem؛ یک ایده بنویس و کانسپت و تصویر هوش مصنوعی بگیر. آنلاین امتحان کن.", "h1": "ناممکن را بساز" },
+      "en": { "title": "AI Studio — Generate Concepts & Images Online | 4miem", "description": "The 4miem AI Studio: write an idea and get an AI concept and image. Try it online.", "h1": "Make the impossible" }
+    },
+    "/about": {
+      "fa": { "title": "درباره‌ی 4miem: استودیوی مستقل تیزر و فیلم با هوش مصنوعی در تهران", "description": "درباره‌ی 4miem (میم)؛ استودیوی مستقل در تهران برای ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی و کارگردانی انسانی.", "h1": "ما یک استودیوی مستقل در تهران هستیم؛ تیزر، فیلم تبلیغاتی و تصویر می‌سازیم، با هوش مصنوعی و کارگردانی انسانی." },
+      "en": { "title": "About 4miem: Independent AI Film & Teaser Studio in Tehran", "description": "About 4miem: an independent studio in Tehran making AI teasers, commercial films and images under human direction.", "h1": "We're an independent studio in Tehran making teasers, commercial films and images with AI and human direction." }
+    },
+    "/contact": {
+      "fa": { "title": "سفارش پروژه و تماس با 4miem", "description": "پروژه‌ات را برای 4miem بفرست؛ تیزر، فیلم تبلیغاتی، هویت بصری یا سایت. فرم تماس یا واتساپ.", "h1": "جرقه را برایمان بگو" },
+      "en": { "title": "Start a Project — Contact 4miem", "description": "Send your project to 4miem: teaser, commercial film, branding or website. Contact form or WhatsApp.", "h1": "Tell us the spark" }
+    }
+  },
+  "services": [
+    {
+      "id": "film",
+      "fa": { "name": "تیزر و فیلم تبلیغاتی با هوش مصنوعی", "text": "از ایده و استوری‌بورد تا ویدیوی نهایی؛ تیزر برند، فیلم کمپین و موزیک‌ویدیو که با ابزارهای هوش مصنوعی ساخته و با کارگردانی انسانی تدوین می‌شود.", "points": ["تیزر و فیلم کمپین ۳۰ تا ۶۰ ثانیه‌ای", "موزیک‌ویدیو ۲۰ تا ۴۵ ثانیه‌ای", "ایده‌پردازی، استوری‌بورد و تدوین"] },
+      "en": { "name": "AI teasers & commercial films", "text": "From idea and storyboard to the final cut: brand teasers, campaign films and music videos made with AI tools and edited under human direction.", "points": ["Teasers and campaign films, 30–60 seconds", "Music videos, 20–45 seconds", "Concept, storyboard and edit"] }
+    },
+    {
+      "id": "branding",
+      "fa": { "name": "هویت بصری و برندینگ", "text": "هویت بصری دیجیتال برای برند شما: زبان تصویری، رنگ، تایپوگرافی و تصاویر شاخص با حال‌وهوای سینمایی.", "points": ["پکیج هویت بصری دیجیتال", "تصاویر و پوسترهای برند", "راهنمای استفاده برای شبکه‌های اجتماعی"] },
+      "en": { "name": "Visual identity & branding", "text": "A digital visual identity for your brand: image language, colour, typography and signature visuals with a cinematic feel.", "points": ["Digital visual identity kit", "Brand imagery and posters", "Usage guide for social media"] }
+    },
+    {
+      "id": "web",
+      "fa": { "name": "سایت و تجربه سه‌بعدی", "text": "وب‌سایت‌های تعاملی و سه‌بعدی (WebGL) با انیمیشن و صدا، مثل همین سایت؛ برای نمونه‌کار، لانچ محصول و کمپین.", "points": ["سایت نمونه‌کار و معرفی برند", "تجربه سه‌بعدی تعاملی", "فارسی و انگلیسی، سازگار با موبایل"] },
+      "en": { "name": "Websites & 3D experiences", "text": "Interactive 3D (WebGL) websites with motion and sound, like this one; for portfolios, product launches and campaigns.", "points": ["Portfolio and brand sites", "Interactive 3D experiences", "Persian and English, mobile friendly"] }
+    },
+    {
+      "id": "ai",
+      "fa": { "name": "تصویرسازی و کانسپت با هوش مصنوعی", "text": "از یک جمله تا کانسپت و تصویر. در AI Studio همین سایت می‌توانید ایده‌تان را آنلاین امتحان کنید.", "points": ["کانسپت‌آرت و استایل‌فریم", "پورتره و تصاویر تبلیغاتی", "امتحان آنلاین در AI Studio"] },
+      "en": { "name": "AI image & concept creation", "text": "From one sentence to a concept and an image. Try your idea online in the AI Studio of this site.", "points": ["Concept art and style frames", "Portraits and advertising images", "Try it online in the AI Studio"] }
+    }
+  ],
+  "process": [
+    { "fa": { "name": "ایده", "text": "از یک جمله، یک حس یا یک تصویر شروع می‌کنیم. هدف و مخاطب روشن می‌شود و ایده شکل می‌گیرد." }, "en": { "name": "Idea", "text": "We start from one sentence, one feeling or one image, then pin down the goal and the audience." } },
+    { "fa": { "name": "پرامت", "text": "ایده به زبان تصویر نوشته می‌شود: برای هر شات یک پرامت دقیق، با رنگ، نور و حرکتی ثابت تا همه‌ی شات‌ها یک دنیا باشند." }, "en": { "name": "Prompts", "text": "The idea is written in the language of images: one precise prompt per shot, with a fixed look for colour, light and motion so every shot belongs to the same world." } },
+    { "fa": { "name": "تولید شات‌ها", "text": "هر شات جداگانه با ابزارهای هوش مصنوعی ساخته می‌شود. تصویر پایان هر شات، تصویر شروع شات بعدی است تا انتقال‌ها پیوسته بمانند." }, "en": { "name": "Shot generation", "text": "Each shot is generated on its own with AI tools. The last frame of one shot becomes the first frame of the next, so transitions stay seamless." } },
+    { "fa": { "name": "تدوین و صداگذاری", "text": "شات‌ها در Premiere Pro کنار هم می‌نشینند، متن فارسی و لوگو دقیق اضافه می‌شود و نریشن، موسیقی و افکت صوتی ساخته می‌شود. خروجی نهایی برای شبکه‌های اجتماعی، تلویزیون یا وب تحویل می‌شود." }, "en": { "name": "Edit & sound", "text": "The shots are assembled in Premiere Pro, exact Persian text and the logo are added, and narration, music and sound effects are built. The final files are delivered for social, TV or web." } }
+  ],
+  "faq": [
+    {
+      "fa": { "q": "4miem چیست؟", "a": "4miem یک استودیوی مستقل ساخت تصویر و ویدیو با هوش مصنوعی در تهران است. تیزر، فیلم تبلیغاتی، موزیک‌ویدیو، هویت بصری و سایت‌های سه‌بعدی می‌سازد." },
+      "en": { "q": "What is 4miem?", "a": "4miem is an independent AI image and film studio in Tehran. It makes teasers, commercial films, music videos, visual identities and 3D websites." }
+    },
+    {
+      "fa": { "q": "برای ساخت تیزر یا فیلم تبلیغاتی با هوش مصنوعی چه کار کنم؟", "a": "فرم تماس را پر کنید یا در واتساپ پیام بدهید. توضیح کوتاه ایده یا حس مورد نظرتان کافی است؛ بقیه مسیر را با هم می‌رویم." },
+      "en": { "q": "How do I order an AI teaser or commercial film?", "a": "Fill in the contact form or message us on WhatsApp. A short description of your idea or the feeling you want is enough; we take it from there." }
+    },
+    {
+      "fa": { "q": "هوش مصنوعی در ساخت کارها چه نقشی دارد؟", "a": "تصویر و ویدیو با ابزارهای هوش مصنوعی ساخته می‌شود و ایده، کارگردانی و تدوین با انسان است." },
+      "en": { "q": "What role does AI play in the work?", "a": "Images and video are generated with AI tools, while the idea, direction and editing are done by people." }
+    },
+    {
+      "fa": { "q": "هزینه پروژه چقدر است؟", "a": "در بخش فروشگاه برای هر بسته یک برآورد سریع می‌بینید. قیمت نهایی بعد از بررسی بریف پروژه مشخص می‌شود." },
+      "en": { "q": "How much does a project cost?", "a": "The shop page gives a quick estimate for each package. The final price is confirmed after reviewing your project brief." }
+    },
+    {
+      "fa": { "q": "می‌توانم قبل از سفارش، هوش مصنوعی را امتحان کنم؟", "a": "بله. در بخش AI Studio همین سایت ایده‌تان را بنویسید تا کانسپت و تصویر بگیرید." },
+      "en": { "q": "Can I try the AI before ordering?", "a": "Yes. Write your idea in the AI Studio on this site to get a concept and an image." }
+    },
+    {
+      "fa": { "q": "سایت‌هایتان چه ویژگی‌هایی دارند؟", "a": "وب‌سایت‌های تعاملی و سه‌بعدی با انیمیشن و صدا، دوزبانه (فارسی و انگلیسی) و سازگار با موبایل." },
+      "en": { "q": "What do your websites offer?", "a": "Interactive 3D websites with motion and sound, bilingual (Persian and English) and mobile friendly." }
+    }
+  ]
+}

@@ -3,3 +3,9 @@ dist
 .env
 .manus-logs
 .env.*
+
+__pycache__/
+*.pyc
+.vercel
+
+leads.json
