@@ -1,0 +1,6 @@
+/* Bottom menu on phones: seven items have to fit in one row */
+@media (max-width: 480px) {
+  nav.view-nav { gap: 1px; padding: 4px; }
+  nav.view-nav a { padding: 12px 6px; letter-spacing: .04em; }
+  html[lang="fa"] nav.view-nav a { font-size: 11px; letter-spacing: 0; }
+}
