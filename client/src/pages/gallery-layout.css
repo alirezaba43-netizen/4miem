@@ -16,3 +16,31 @@
   /* the paragraph sat behind the tablet, so it is hidden here */
   .gallery-page .gallery-act .world-copy p { display: none; }
 }
+
+/* Gallery (phones): one small headline line above the tablet, and both buttons in one row */
+@media (max-width: 899px) {
+  .gallery-page .gallery-act .world-copy { width: calc(100% - 24px); }
+  .gallery-page .gallery-act .world-copy h1 {
+    margin: 8px 0 0;
+    font-size: clamp(20px, 6.8vw, 30px);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .gallery-page .gallery-act .world-copy h1 br { display: none; }
+  .gallery-page .gallery-act .world-copy p { display: none; }
+
+  /* the buttons carry inline styles, so these need !important */
+  .gallery-page .gallery-actions {
+    bottom: 78px !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+  .gallery-page .gallery-actions .gallery-action {
+    padding: 9px 14px !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+  .gallery-page .gallery-actions .gallery-action svg { width: 14px; height: 14px; }
+}

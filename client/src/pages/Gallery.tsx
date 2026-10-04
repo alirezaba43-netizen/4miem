@@ -592,8 +592,9 @@ export default function Gallery({ lang, onOpenAi, onOpenProject }: { lang: Lang;
 					</div>
 				</div>
 
-				<div style={{ position: "absolute", bottom: "110px", left: "50%", transform: "translateX(-50%)", zIndex: 25, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", width: "max-content", maxWidth: "92vw" }}>
+				<div className="gallery-actions" style={{ position: "absolute", bottom: "110px", left: "50%", transform: "translateX(-50%)", zIndex: 25, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px", width: "max-content", maxWidth: "92vw" }}>
 					<button 
+						className="gallery-action"
 						type="button"
 						lang={lang}
 						onClick={handleTogglePlay}
@@ -618,6 +619,7 @@ export default function Gallery({ lang, onOpenAi, onOpenProject }: { lang: Lang;
 						{isPlaying ? t.pause : t.play}
 					</button>
 					<button
+						className="gallery-action"
 						type="button"
 						lang={lang}
 						aria-label={`${t.open}: ${portfolioProjects[realIndex].title[lang]}`}
