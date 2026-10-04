@@ -1,0 +1,18 @@
+/* Gallery (desktop): keep the hero text clear of the top bar and of the tablet.
+   The tablet's top edge sits at about 24% of the window height, so the headline
+   shrinks with the window height instead of running into it. */
+@media (min-width: 900px) {
+  .gallery-page .gallery-act .world-copy {
+    top: clamp(84px, 9dvh, 120px);
+    width: min(1100px, 92vw);
+  }
+  .gallery-page .gallery-act .world-copy h1 {
+    margin: 10px 0 0;
+    font-size: clamp(34px, min(6vw, calc(24dvh - 130px)), 84px);
+    line-height: .95;
+    white-space: nowrap;
+  }
+  .gallery-page .gallery-act .world-copy h1 br { display: none; }
+  /* the paragraph sat behind the tablet, so it is hidden here */
+  .gallery-page .gallery-act .world-copy p { display: none; }
+}

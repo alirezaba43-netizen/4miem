@@ -1,18 +1,17 @@
 import React, { useRef, useState } from "react";
+import { useLang } from "../lib/i18n";
+
+const SERVICE_VALUES = ["Film & commercial", "Branding", "Web & 3D Experience"] as const;
 
 const EMPTY_FORM = {
   name: "",
   email: "",
   phone: "",
-  service: "Film & commercial",
+  service: SERVICE_VALUES[0] as string,
   brief: "",
 };
 
-// لینک وب‌اپلیکیشن گوگل اسکریپت شما
-const GOOGLE_SHEET_WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbyP0C6DqiR74c4wyUxgvGrXItgR6YX276OF6OaYfxAYN3M3c5paSuVXpZ5F7U5Hy_UNOw/exec";
-
-// لینک هدایت مستقیم به واتساپ شما
+// شماره واتساپ استودیو
 const ADMIN_WHATSAPP_NUMBER = "989108178424";
 
 // تبدیل ارقام فارسی و عربی به انگلیسی و پاک‌کردن فاصله و خط تیره
@@ -30,8 +29,9 @@ const normalizePhone = (value: string) => {
   return digits;
 };
 
-// اعتبارسنجی ساختار شماره موبایل ایران (شروع با 09 و ۱۱ رقم)
-const validateIranianPhone = (phone: string) => /^09[0-9]{9}$/.test(phone);
+// موبایل ایران (09xxxxxxxxx) یا شماره بین‌المللی (۷ تا ۱۵ رقم، با + اختیاری)
+const validatePhone = (phone: string) => /^09[0-9]{9}$/.test(phone) || /^\+?[0-9]{7,15}$/.test(phone);
+const validateEmail = (email: string) => /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/.test(email);
 
 type Status = {
   loading: boolean;
@@ -40,26 +40,21 @@ type Status = {
 };
 
 export default function Contact({ onClose }: { onClose?: () => void }) {
+  const { lang, dir, t } = useLang();
+  const c = t.contact;
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [step, setStep] = useState<"form" | "success">("form");
-  const [status, setStatus] = useState<Status>({
-    loading: false,
-    success: null,
-    message: "",
-  });
+  const [status, setStatus] = useState<Status>({ loading: false, success: null, message: "" });
 
   // فیلد مخفی ضد ربات: انسان‌ها نمی‌بینن و پر نمی‌کنن
   const honeypotRef = useRef<HTMLInputElement>(null);
   // ناحیه‌ی قابل اسکرول صفحه
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const resetAll = () => {
@@ -74,89 +69,80 @@ export default function Contact({ onClose }: { onClose?: () => void }) {
     else resetAll();
   };
 
+  const fail = (message: string) => setStatus({ loading: false, success: false, message });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (status.loading) return;
 
-    // اگر ربات فیلد مخفی را پر کرده باشد، بی‌صدا نادیده می‌گیریم
-    if (honeypotRef.current?.value) {
-      setStep("success");
-      return;
-    }
-
     const phone = normalizePhone(formData.phone);
+    const email = formData.email.trim();
 
-    if (!validateIranianPhone(phone)) {
-      setStatus({
-        loading: false,
-        success: false,
-        message: "لطفا یک شماره موبایل معتبر ایرانی وارد کنید (مثال: 09123456789)",
-      });
-      return;
-    }
+    if (!validateEmail(email)) return fail(c.badEmail);
+    if (!validatePhone(phone)) return fail(c.badPhone);
 
     setStatus({ loading: true, success: null, message: "" });
 
     const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 15000);
+    const timer = window.setTimeout(() => controller.abort(), 25000);
 
     try {
-      // ارسال مستقیم داده‌ها به وب‌اسکریپت گوگل (برای ثبت در شیت و ارسال ایمیل‌ها)
-      // توجه: با no-cors مرورگر پاسخ سرور را نمی‌بیند، پس موفقیت را باید در شیت چک کرد
-      await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+      // فرم به سرور خودمان (/api/lead) می‌رود؛ آنجا بررسی و محدودیت تعداد انجام می‌شود
+      const res = await fetch("/api/lead", {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, phone }),
         signal: controller.signal,
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email,
+          phone,
+          service: formData.service,
+          brief: formData.brief.trim(),
+          website: honeypotRef.current?.value ?? "",
+        }),
       });
+
+      if (res.status === 429) return fail(c.tooMany);
+      if (!res.ok) return fail(res.status === 400 ? c.invalid : c.network);
 
       setFormData({ ...formData, phone });
       setStep("success");
-      setStatus({ loading: false, success: true, message: "پیام شما با موفقیت ثبت شد!" });
+      setStatus({ loading: false, success: true, message: "" });
       scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
-      setStatus({
-        loading: false,
-        success: false,
-        message: "خطا در ارتباط با سرور. اینترنت را بررسی کنید و دوباره تلاش کنید.",
-      });
+      fail(c.network);
     } finally {
       window.clearTimeout(timer);
     }
   };
 
-  const whatsappMessage = encodeURIComponent(
-    `سلام، من ${formData.name} هستم. درخواست پروژه (${formData.service}) را در سایت ثبت کردم.`
-  );
-  const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${whatsappMessage}`;
+  const serviceLabel = c.services[formData.service] ?? formData.service;
+  const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(c.waMessage(formData.name, serviceLabel))}`;
 
   const inputClass =
     "w-full bg-[#18221f] border border-[#2a3c35] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500";
   const labelClass = "block text-xs uppercase tracking-wider text-gray-400 mb-2";
 
   return (
-    <div
+    <main
+      id="main"
       ref={scrollRef}
       className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-[#0b0f0e] text-[#e0e0e0] flex flex-col items-center p-6 pb-28"
       style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain", touchAction: "pan-y" }}
     >
-      <div className="w-full max-w-2xl my-auto bg-[#121816] p-8 rounded-2xl border border-[#1f2d28] shadow-2xl relative">
-        {/* دکمه ضربدر (بستن) در بالای کارت */}
+      <div dir={dir} className="w-full max-w-2xl my-auto bg-[#121816] p-8 rounded-2xl border border-[#1f2d28] shadow-2xl relative">
         <button
           type="button"
           onClick={handleClose}
-          className="absolute top-6 left-6 text-gray-400 hover:text-white text-sm transition-colors"
-          title="بستن / بازگشت"
-          aria-label="بستن"
+          className="absolute top-6 end-6 text-gray-400 hover:text-white text-sm transition-colors"
+          title={c.close}
+          aria-label={c.close}
         >
           ✕
         </button>
 
-        <h2 className="text-3xl font-bold text-center mb-2 text-white">Tell us the spark.</h2>
-        <p dir="rtl" className="text-center text-sm text-gray-400 mb-8">
-          یک جمله، یک حس یا یک تصویر کافی‌ست تا شروع کنیم.
-        </p>
+        <h1 className="text-3xl font-bold text-center mb-2 text-white">{c.title}</h1>
+        <p className="text-center text-sm text-gray-400 mb-8">{c.subtitle}</p>
 
         {step === "form" ? (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -172,82 +158,36 @@ export default function Contact({ onClose }: { onClose?: () => void }) {
             />
 
             <div>
-              <label htmlFor="contact-name" className={labelClass}>Your Name</label>
-              <input
-                id="contact-name"
-                type="text"
-                name="name"
-                dir="auto"
-                autoComplete="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className={inputClass}
-                placeholder="علیرضا"
-              />
+              <label htmlFor="contact-name" className={labelClass}>{c.name}</label>
+              <input id="contact-name" type="text" name="name" dir="auto" autoComplete="name" maxLength={80}
+                value={formData.name} onChange={handleChange} required className={inputClass} placeholder={c.namePh} />
             </div>
 
             <div>
-              <label htmlFor="contact-email" className={labelClass}>Email</label>
-              <input
-                id="contact-email"
-                type="email"
-                name="email"
-                dir="ltr"
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className={inputClass}
-                placeholder="name@example.com"
-              />
+              <label htmlFor="contact-email" className={labelClass}>{c.email}</label>
+              <input id="contact-email" type="email" name="email" dir="ltr" autoComplete="email" maxLength={160}
+                value={formData.email} onChange={handleChange} required className={inputClass} placeholder="name@example.com" />
             </div>
 
             <div>
-              <label htmlFor="contact-phone" className={labelClass}>Phone Number</label>
-              <input
-                id="contact-phone"
-                type="tel"
-                name="phone"
-                dir="ltr"
-                inputMode="tel"
-                autoComplete="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className={inputClass}
-                placeholder="09123456789"
-              />
+              <label htmlFor="contact-phone" className={labelClass}>{c.phone}</label>
+              <input id="contact-phone" type="tel" name="phone" dir="ltr" inputMode="tel" autoComplete="tel" maxLength={20}
+                value={formData.phone} onChange={handleChange} required className={inputClass} placeholder="09123456789" />
             </div>
 
             <div>
-              <label htmlFor="contact-service" className={labelClass}>Project Type</label>
-              <select
-                id="contact-service"
-                name="service"
-                value={formData.service}
-                onChange={handleChange}
-                className={inputClass}
-              >
-                <option value="Film & commercial">Film & commercial</option>
-                <option value="Branding">Branding</option>
-                <option value="Web & 3D Experience">Web & 3D Experience</option>
+              <label htmlFor="contact-service" className={labelClass}>{c.service}</label>
+              <select id="contact-service" name="service" value={formData.service} onChange={handleChange} className={inputClass}>
+                {SERVICE_VALUES.map((value) => (
+                  <option key={value} value={value}>{c.services[value]}</option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label htmlFor="contact-brief" className={labelClass}>The Short Version</label>
-              <textarea
-                id="contact-brief"
-                name="brief"
-                dir="auto"
-                value={formData.brief}
-                onChange={handleChange}
-                rows={4}
-                required
-                className={inputClass}
-                placeholder="درباره پروژه‌تان بنویسید..."
-              />
+              <label htmlFor="contact-brief" className={labelClass}>{c.brief}</label>
+              <textarea id="contact-brief" name="brief" dir="auto" value={formData.brief} onChange={handleChange}
+                rows={4} maxLength={2000} required className={inputClass} placeholder={c.briefPh} />
             </div>
 
             <button
@@ -255,18 +195,16 @@ export default function Contact({ onClose }: { onClose?: () => void }) {
               disabled={status.loading}
               className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center"
             >
-              {status.loading ? "در حال ثبت اطلاعات..." : "ارسال پیام و ثبت نهایی"}
+              {status.loading ? c.sending : c.submit}
             </button>
           </form>
         ) : (
-          <div dir="rtl" className="text-center space-y-5 py-6">
+          <div className="text-center space-y-5 py-6" role="status">
             <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl">
               ✓
             </div>
-            <h3 className="text-2xl font-bold text-white">پیام شما با موفقیت ثبت شد</h3>
-            <p className="text-sm text-gray-300">
-              اطلاعات شما ثبت شد و ایمیل تأیید ارسال گردید. برای گفتگوی مستقیم، می‌توانید از طریق واتساپ نیز اقدام کنید:
-            </p>
+            <h2 className="text-2xl font-bold text-white">{c.okTitle}</h2>
+            <p className="text-sm text-gray-300">{c.okText}</p>
 
             <a
               href={whatsappUrl}
@@ -274,30 +212,25 @@ export default function Contact({ onClose }: { onClose?: () => void }) {
               rel="noopener noreferrer"
               className="inline-block w-full bg-green-600 hover:bg-green-500 text-white font-medium py-3 rounded-lg transition-colors text-center"
             >
-              ارتباط مستقیم در واتساپ 💬
+              {c.whatsapp}
             </a>
 
-            {/* دکمه بازگشت و بستن صفحه موفقیت */}
             <button
               type="button"
               onClick={resetAll}
               className="w-full bg-[#18221f] hover:bg-[#202c28] border border-[#2a3c35] text-gray-300 font-medium py-3 rounded-lg transition-colors"
             >
-              بازگشت به فرم / ارسال پیام جدید
+              {c.again}
             </button>
           </div>
         )}
 
         {status.message && step === "form" && (
-          <p
-            dir="rtl"
-            role="alert"
-            className={`text-center text-sm mt-4 ${status.success ? "text-emerald-400" : "text-red-400"}`}
-          >
+          <p role="alert" className={`text-center text-sm mt-4 ${status.success ? "text-emerald-400" : "text-red-400"}`}>
             {status.message}
           </p>
         )}
       </div>
-    </div>
+    </main>
   );
 }

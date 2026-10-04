@@ -1,0 +1,13 @@
+# 4miem
+
+> 4miem (میم) is an independent AI film, teaser and image studio in Tehran. It makes AI teasers and commercial films, music videos, visual identities, AI image concepts, and interactive 3D websites. The site is available in Persian and English (language switch in the page).
+> 4miem (میم) یک استودیوی مستقل ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی در تهران است.
+
+## Pages
+- [Home](https://4miem.vercel.app/): the interactive 3D entrance to the studio
+- [Gallery](https://4miem.vercel.app/gallery): sample teasers, renders and videos made with AI
+- [Services](https://4miem.vercel.app/services): what the studio makes, how it works, FAQ
+- [Shop](https://4miem.vercel.app/shop): production packages and a quick estimate
+- [AI Studio](https://4miem.vercel.app/ai-studio): try an idea online and get an AI concept and image
+- [About](https://4miem.vercel.app/about): who the studio is and what it makes
+- [Contact](https://4miem.vercel.app/contact): start a project (form or WhatsApp)

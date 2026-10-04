@@ -1,15 +1,58 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <!-- No maximum-scale: visitors must be able to pinch-zoom. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#06090b" />
-    <meta name="description" content="4miem — an independent image-making studio for ideas that refuse to stay still." />
-    <title>4miem — Give the idea a body.</title>
+    <meta name="color-scheme" content="dark" />
+
+    <!-- The title, description, canonical and social tags below are the Persian home page defaults.
+         `npm run build` runs scripts/prerender.mjs, which writes a copy of this file for every route
+         (values come from client/src/lib/seo.json); the app keeps them in sync while the visitor navigates. -->
+    <title>4miem | استودیوی ساخت تیزر و فیلم با هوش مصنوعی</title>
+    <meta name="description" content="4miem؛ استودیوی مستقل ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی در تهران. ایده‌ات را به تصویر و ویدیو تبدیل کن." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://4miem.vercel.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="4miem" />
+    <meta property="og:title" content="4miem | استودیوی ساخت تیزر و فیلم با هوش مصنوعی" />
+    <meta property="og:description" content="4miem؛ استودیوی مستقل ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی در تهران. ایده‌ات را به تصویر و ویدیو تبدیل کن." />
+    <meta property="og:url" content="https://4miem.vercel.app/" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:image" content="https://4miem.vercel.app/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="4miem — Give the idea a body." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="4miem | استودیوی ساخت تیزر و فیلم با هوش مصنوعی" />
+    <meta name="twitter:description" content="4miem؛ استودیوی مستقل ساخت تیزر، فیلم تبلیغاتی و تصویر با هوش مصنوعی در تهران. ایده‌ات را به تصویر و ویدیو تبدیل کن." />
+    <meta name="twitter:image" content="https://4miem.vercel.app/og-image.jpg" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Manrope + DM Mono (Latin) and Vazirmatn (Persian). Space Grotesk is self-hosted in index.css. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Vazirmatn:wght@300;400;500;600;700&display=swap"
+    />
+    <link rel="preload" href="/fonts/SpaceGrotesk-SemiBold.ttf" as="font" type="font/ttf" crossorigin />
+    <!--JSONLD-->
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--PRERENDER--></div>
+    <noscript>
+      <p style="margin:0;padding:24px;background:#06090b;color:#e7f5f3;font:16px/1.8 system-ui,sans-serif">
+        برای دیدن سایت 4miem جاوااسکریپت را فعال کنید. / Please enable JavaScript to view the 4miem site.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
-    <script defer src="%VITE_ANALYTICS_ENDPOINT%/umami" data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
   </body>
 </html>
