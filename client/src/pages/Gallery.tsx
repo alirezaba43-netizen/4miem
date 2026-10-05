@@ -24,6 +24,9 @@ const copy = {
 		next: "ویدیوی بعدی",
 		switchLang: "Switch to English",
 		open: "مشاهده پروژه",
+		title: "نمونه‌کارهایی برای جهان‌های تازه",
+		lead: "این‌ها آزمایش‌های مستقل 4miem هستند؛ از ایده و پرامت تا تولید با هوش مصنوعی، ادیت و صداگذاری در Premiere Pro.",
+		eyebrow: "گالری / نمونه‌های تجربی",
 	},
 	en: {
 		hint: "Press the button below to play or pause the video, and use the arrows or swipe to change the screen.",
@@ -33,6 +36,9 @@ const copy = {
 		next: "Next video",
 		switchLang: "تغییر به فارسی",
 		open: "View project",
+		title: "Sample work for new worlds",
+		lead: "Independent 4miem experiments: from idea and prompts to AI generation, editing and sound design in Premiere Pro.",
+		eyebrow: "GALLERY / EXPERIMENTAL SAMPLES",
 	},
 } as const;
 
@@ -650,9 +656,9 @@ export default function Gallery({ lang, onOpenAi, onOpenProject }: { lang: Lang;
 						<span className="muted">4MIEM / AI STUDIO</span>
 					</div>
 					<div className="world-copy" style={{ transform: "translateX(-50%)", pointerEvents: "auto" }}>
-						<span className="hero-kicker"><Sparkles size={12} /> ADVANCED WORKSPACE</span>
-						<h1>A desk for{" "}<br /><em>new worlds.</em></h1>
-						<p lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>{t.hint}</p>
+						<span className="hero-kicker"><Sparkles size={12} /> {t.eyebrow}</span>
+						<h1 lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>{t.title}</h1>
+						<p lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>{t.lead}</p>
 					</div>
 					<div className="world-rail right">
 						<span>IDEAS IN / IMAGES OUT</span>

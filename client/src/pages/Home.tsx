@@ -3,9 +3,10 @@ import { Bloom, EffectComposer, Noise, Vignette } from "@react-three/postprocess
 import { Environment, Text } from "@react-three/drei";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { ArrowDownRight, Sparkles, Volume2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Check, PlayCircle, Sparkles, Volume2 } from "lucide-react";
 import { useLang } from "../lib/i18n";
 import { playSfx, soundEnabled } from "../lib/sound";
+import { portfolioProjects } from "../lib/projects";
 
 const BOOT_FLAG = "4miem-booted";
 const bootedBefore = () => { try { return window.sessionStorage.getItem(BOOT_FLAG) === "1"; } catch { return false; } };
@@ -114,7 +115,7 @@ function Boot({ onEnter }: { onEnter: () => void }) {
       </div>
     )}
 
-    {started && <button className="skip-boot" onClick={skip}>{t.home.bootSkip} <ArrowDownRight size={15} /></button>}
+    <button className="skip-boot" onClick={skip}>{t.home.bootSkip} <ArrowDownRight size={15} /></button>
   </div>;
 }
 
@@ -310,7 +311,7 @@ function ReceptionScene({ burst, onActivate }: { burst: boolean; onActivate: () 
   </>;
 }
 
-export default function Home({ onOpenGallery }: { onOpenGallery: () => void }) {
+export default function Home({ onOpenGallery, onOpenContact }: { onOpenGallery: () => void; onOpenContact: () => void }) {
   const { lang, t } = useLang();
   // The typing intro plays once per visit; coming back to Home goes straight to the reception.
   const [act, setAct] = useState<"boot" | "reception">(() => (bootedBefore() ? "reception" : "boot"));
@@ -334,7 +335,20 @@ export default function Home({ onOpenGallery }: { onOpenGallery: () => void }) {
     }, 1400);
   }, [onOpenGallery]);
 
-  return <main className={`site-shell three-act ${fadeScreen ? "fade-out-active" : ""}`}>
+  const isFa = lang === "fa";
+  const services = isFa
+    ? [
+        { title: "تیزر و فیلم تبلیغاتی", text: "از ایده و استوری‌بورد تا فیلم نهایی برای کمپین، محصول و شبکه‌های اجتماعی." },
+        { title: "هویت بصری و تصویرسازی", text: "یک زبان تصویری منسجم برای برند؛ از استایل‌فریم و پوستر تا دنیای بصری کمپین." },
+        { title: "وب و تجربه‌های سه‌بعدی", text: "سایت‌های تعاملی و WebGL که برند شما را به یک تجربه‌ی قابل‌تجربه تبدیل می‌کنند." },
+      ]
+    : [
+        { title: "AI teasers & commercials", text: "From concept and storyboard to a finished film for campaigns, products and social." },
+        { title: "Visual identity & imagery", text: "A coherent visual language for your brand, from styleframes to campaign worlds." },
+        { title: "Web & 3D experiences", text: "Interactive WebGL sites that turn your brand into something people can experience." },
+      ];
+
+  return <main className={`site-shell three-act conversion-home ${fadeScreen ? "fade-out-active" : ""}`} dir={isFa ? "rtl" : "ltr"}>
     {act === "boot" && <Boot onEnter={enterReception} />}
     <header className="topbar"><div className="brand-lockup"><span className="brand-symbol">∞</span><span className="brand-name">4miem<span className="brand-dot">.</span></span></div><div className="topbar-status"><span className="status-dot" /> <span>STUDIO / ONLINE</span></div><div className="topbar-coord">35°41' N / 51°25' E</div></header>
     <section className="world-section reception-act" style={{ opacity: fadeScreen ? 0 : 1, transition: "opacity 0.6s ease-in-out" }}>
@@ -342,7 +356,38 @@ export default function Home({ onOpenGallery }: { onOpenGallery: () => void }) {
         <CameraRig />
         {act === "reception" && <ReceptionScene burst={burst} onActivate={activateInfinity} />}
       </Canvas>
-      <div className="world-overlay"><div className="world-rail left"><span>01 / RECEPTION BOOTH</span><span className="muted">4MIEM / MEM STUDIO</span></div><div className="world-copy"><span className="hero-kicker"><Sparkles size={12} /> {t.home.kicker}</span><h1>{lang === "fa" ? <>به ایده<br /><em>جان</em> بده.</> : <>Give the<br /><em>idea</em> a body.</>}</h1><p dir="auto">{t.home.hint}</p>{act === "reception" && <button type="button" className="enter-gallery" onClick={activateInfinity}>{t.home.enter} <ArrowDownRight size={14} /></button>}</div><div className="world-rail right"><span>IDEAS IN / IMAGES OUT</span><span className="muted">TEHRAN · IR</span></div><div className="world-footer"><span className="scroll-line" /> <span>{t.home.footer}</span></div></div>
+      <div className="world-overlay"><div className="world-rail left"><span>01 / RECEPTION BOOTH</span><span className="muted">4MIEM / MEM STUDIO</span></div><div className="world-copy"><span className="hero-kicker"><Sparkles size={12} /> {t.home.kicker}</span><h1>{lang === "fa" ? <>به ایده<br /><em>جان</em> بده.</> : <>Give the<br /><em>idea</em> a body.</>}</h1><p dir="auto">{isFa ? "تیزر، فیلم و محتوای تبلیغاتی با هوش مصنوعی و کارگردانی انسانی." : "AI teasers, films and visual content under human direction."}</p>{act === "reception" && <div className="hero-actions"><button type="button" className="enter-gallery" onClick={activateInfinity}>{t.home.enter} <ArrowDownRight size={14} /></button><button type="button" className="hero-contact-button" onClick={onOpenContact}>{isFa ? "مشاوره رایگان" : "Free consultation"}<ArrowUpRight size={13} /></button></div>}</div><div className="world-rail right"><span>IDEAS IN / IMAGES OUT</span><span className="muted">TEHRAN · IR</span></div><div className="world-footer"><span className="scroll-line" /> <span>{t.home.footer}</span></div></div>
     </section>
+
+    <section className="conversion-section conversion-intro" id="main">
+      <div className="conversion-copy">
+        <span className="conversion-eyebrow">02 / {isFa ? "استودیو، نه فقط ابزار" : "A STUDIO, NOT JUST A TOOL"}</span>
+        <h2>{isFa ? <>ایده‌تان را به <em>تصویری که می‌فروشد</em> تبدیل می‌کنیم.</> : <>We turn your idea into <em>images that move people.</em></>}</h2>
+        <p>{isFa ? "4miem یک استودیوی مستقل تصویر و ویدیوست؛ با سرعت هوش مصنوعی، دقت کارگردانی انسانی و خروجی آماده‌ی انتشار." : "4miem is an independent image and film studio combining the speed of AI with human direction and production-ready delivery."}</p>
+        <div className="conversion-actions">
+          <button type="button" className="conversion-button primary" onClick={onOpenContact}>{isFa ? "دریافت مشاوره رایگان" : "Get a free consultation"}<ArrowUpRight size={16} /></button>
+          <button type="button" className="conversion-button secondary" onClick={onOpenGallery}>{isFa ? "دیدن نمونه‌کارها" : "Explore the work"}<PlayCircle size={16} /></button>
+        </div>
+      </div>
+      <div className="proof-grid" aria-label={isFa ? "مزیت‌های همکاری" : "Reasons to work with us"}>
+        {(isFa ? ["ایده‌پردازی اختصاصی", "خروجی آماده‌ی انتشار", "فارسی و انگلیسی، سازگار با موبایل"] : ["Original concepts", "Production-ready output", "Bilingual and mobile-ready"]).map((item) => <div className="proof-item" key={item}><Check size={15} /> <span>{item}</span></div>)}
+      </div>
+    </section>
+
+    <section className="conversion-section service-preview" id="services">
+      <div className="section-heading-row"><div><span className="conversion-eyebrow">03 / {isFa ? "خدمات" : "SERVICES"}</span><h2>{isFa ? "برای هر مرحله از روایت شما" : "For every stage of your story"}</h2></div><button type="button" className="text-link" onClick={() => window.location.assign("/services")}>{isFa ? "همه خدمات" : "All services"}<ArrowUpRight size={14} /></button></div>
+      <div className="service-preview-grid">{services.map((service, index) => <article className="conversion-service-card" key={service.title}><span>0{index + 1}</span><h3>{service.title}</h3><p>{service.text}</p><button type="button" className="text-link" onClick={() => window.location.assign("/services")}>{isFa ? "جزئیات خدمت" : "See details"}<ArrowUpRight size={13} /></button></article>)}</div>
+    </section>
+
+    <section className="conversion-section work-preview" id="work">
+      <div className="section-heading-row"><div><span className="conversion-eyebrow">04 / {isFa ? "نمونه‌کار منتخب" : "SELECTED WORK"}</span><h2>{isFa ? "چند جهان که ساخته‌ایم" : "A few worlds we built"}</h2></div><button type="button" className="text-link" onClick={onOpenGallery}>{isFa ? "مشاهده گالری" : "View gallery"}<ArrowUpRight size={14} /></button></div>
+      <div className="conversion-work-grid">{portfolioProjects.map((project, index) => <button type="button" className="conversion-work-card" key={project.slug} onClick={onOpenGallery}><div className="conversion-work-image"><img src={project.posterUrl} alt={project.title[lang]} loading="lazy" /><span className="work-index">0{index + 1} / 0{portfolioProjects.length}</span><span className="work-play"><PlayCircle size={24} /></span></div><div className="conversion-work-meta"><strong>{project.title[lang]}</strong><span>{project.type?.[lang] ?? (isFa ? "نمونه تصویری" : "VISUAL SAMPLE")}</span></div></button>)}</div>
+    </section>
+
+    <section className="conversion-section process-preview">
+      <div className="process-intro"><span className="conversion-eyebrow">05 / {isFa ? "فرآیند همکاری" : "HOW IT WORKS"}</span><h2>{isFa ? "از یک جمله تا خروجی نهایی." : "From one sentence to the final cut."}</h2><p>{isFa ? "مسیر روشن است؛ شما ایده را می‌آورید، ما آن را به یک جهان تصویری قابل استفاده تبدیل می‌کنیم." : "The path is clear: you bring the spark, we turn it into a visual world ready to use."}</p></div><ol className="process-list">{(isFa ? ["بریف و هدف", "مسیر خلاقانه", "تولید و بازبینی", "تحویل آماده انتشار"] : ["Brief & objective", "Creative direction", "Production & review", "Ready-to-publish delivery"]).map((step, index) => <li key={step}><span>0{index + 1}</span><strong>{step}</strong></li>)}</ol>
+    </section>
+
+    <section className="conversion-section conversion-cta" id="start-project"><span className="conversion-eyebrow">06 / {isFa ? "شروع کنیم" : "LET'S START"}</span><h2>{isFa ? <>یک ایده دارید؟<br /><em>بفرستیدش.</em></> : <>Have an idea?<br /><em>Send it over.</em></>}</h2><p>{isFa ? "یک جمله، یک حس یا یک تصویر کافی‌ست تا گفت‌وگو را شروع کنیم." : "One sentence, one feeling or one image is enough to begin."}</p><button type="button" className="conversion-button primary" onClick={onOpenContact}>{isFa ? "ارسال بریف پروژه" : "Send your brief"}<ArrowUpRight size={16} /></button></section>
   </main>;
 }

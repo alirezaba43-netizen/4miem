@@ -16,6 +16,8 @@
 .pj-head h1 { margin: 0; color: #e9faf5; font: 600 clamp(40px, 7vw, 88px)/.92 "Space Grotesk", "Vazirmatn", sans-serif; letter-spacing: -.03em; overflow-wrap: anywhere; }
 html[lang="fa"] .pj-head h1 { font-weight: 700; line-height: 1.2; letter-spacing: 0; }
 .pj-tagline { max-width: 440px; margin: 18px 0 0; color: rgba(200, 232, 225, .78); font-size: 15px; line-height: 1.85; }
+.pj-source-link { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; color: var(--cyan); font: 10px "DM Mono", "Vazirmatn", monospace; letter-spacing: .04em; }
+.pj-source-link:hover { color: #fff; }
 
 .pj-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 18px 24px; margin: 34px 0 0; padding-top: 16px; border-top: 1px solid var(--line); }
 .pj-meta dt { color: var(--muted-foreground); font-size: 12px; }

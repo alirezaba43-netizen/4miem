@@ -88,7 +88,7 @@ function Shell() {
 
       <Suspense fallback={<div className="route-loading" role="status" aria-label="Loading"><span>∞</span></div>}>
         <Switch>
-          <Route path="/"><Home onOpenGallery={() => go("/gallery")} /></Route>
+          <Route path="/"><Home onOpenGallery={() => go("/gallery")} onOpenContact={() => go("/contact")} /></Route>
           <Route path="/gallery"><Gallery lang={lang} onToggleLang={toggle} onOpenAi={() => go("/ai-studio")} onOpenProject={(slug) => go(`/gallery/${slug}`)} /></Route>
           <Route path="/gallery/:slug">{(params) => <Project slug={params.slug} onNavigate={go} />}</Route>
           <Route path="/services"><Services onContact={() => go("/contact")} onShop={() => go("/shop")} /></Route>

@@ -13,6 +13,7 @@ const copy = {
     type: "نوع کار",
     tools: "ابزار",
     process: "مراحل ساخت را ببین",
+    source: "مشاهده نمونه‌ی اصلی در اینستاگرام",
     next: "پروژه‌ی بعدی",
     cta: "پروژه‌ات را بفرست",
     comma: "، ",
@@ -24,6 +25,7 @@ const copy = {
     type: "Type",
     tools: "Tools",
     process: "Show how it was made",
+    source: "Watch the original sample on Instagram",
     next: "Next project",
     cta: "Send your project",
     comma: ", ",
@@ -118,6 +120,7 @@ export default function Project({ slug, onNavigate }: Props) {
             <header className="pj-head">
               <h1>{project.title[lang]}</h1>
               {tagline && <p className="pj-tagline">{tagline}</p>}
+              {project.sourceUrl && <a className="pj-source-link" href={project.sourceUrl} target="_blank" rel="noreferrer">{c.source} <ArrowUpRight size={14} /></a>}
               {meta.length > 0 && (
                 <dl className="pj-meta">
                   {meta.map((item) => (
